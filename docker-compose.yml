@@ -1,0 +1,60 @@
+services:
+  mujoco-wrapper:
+    build:
+      context: ./wrapper
+      dockerfile: Dockerfile
+    container_name: mujoco-wrapper
+    networks:
+      - sim-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # healthcheck:
+    #   test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 30s
+
+  ros-bridge:
+    profiles: ["ros"]
+    build:
+      context: ./ros-bridge
+      dockerfile: Dockerfile
+    container_name: ros-bridge
+    networks:
+      - sim-net
+    depends_on:
+      mujoco-wrapper:
+        condition: service_healthy
+    environment:
+      - ZMQ_LIDAR_ENDPOINT=tcp://mujoco-wrapper:5555
+      - ROS_MASTER_URI=http://ros-bridge:11311
+      - ROS_DOMAIN_ID=42
+
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    container_name: agent
+    networks:
+      - sim-net
+    depends_on:
+      - mujoco-wrapper
+      # mujoco-wrapper:
+      #   condition: service_healthy
+    environment:
+      - LLM_BASE=http://host.docker.internal:8080/v1
+      - LLM_MODEL=Qwen3.5-4B_Q4_K_M.gguf
+      - MCP_URL=http://mujoco-wrapper:8081/mcp
+      - ZMQ_ENDPOINT=tcp://mujoco-wrapper:5555
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  sim-net:
+    driver: bridge

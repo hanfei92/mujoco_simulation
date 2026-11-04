@@ -93,7 +93,7 @@ def move_joint(actuator_name: str, pos: float) -> dict:
 def main():
     _start_sim()
     try:
-        mcp.run(transport="streamable-http", host="0.0.0.0", port=8080)
+        mcp.run(transport="streamable-http", host="0.0.0.0", port=8081)
     finally:
         if _stop_event is not None:
             _stop_event.set()
