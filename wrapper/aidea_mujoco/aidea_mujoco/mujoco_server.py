@@ -12,6 +12,10 @@ import mujoco
 import mujoco._functions
 import mujoco._enums
 import numpy as np
+
+from aidea_mujoco.zmq_publisher import ZmqPublisher
+from aidea_mujoco.msg import lidar_pb2
+
 from mujoco._structs import MjData, MjModel
 import mujoco._enums
 
@@ -231,6 +235,8 @@ class LidarController:
     def __init__(self, mujoco_server: "MujocoServer") -> None:
         self.mujoco_server = mujoco_server
 
+        self._pub = mujoco_server.zmq_publisher
+
         # ---- 射线：Airy 96 线，水平 360°、垂直上半球 ----
         self.rays_theta, self.rays_phi = scan_gen.generate_airy96()
         self.rays_theta = np.ascontiguousarray(self.rays_theta).astype(np.float32)
@@ -280,53 +286,6 @@ class LidarController:
             self._thread.join(timeout=2.0)
             self._thread = None
 
-    def _loop(self):
-        """LiDAR 扫描主循环，10Hz。"""
-        print("[lidar] thread started")
-        # 等物理线程先跑起来，mjdata 有效
-        time.sleep(0.5)
-        while self._running and not self.mujoco_server._is_requested_to_stop():
-            try:
-                self._scan_once()
-                # print(f"[lidar] scan once, points={len(self.mujoco_server.data_proxies.get_lidar_points())}")
-            except Exception as e:
-                print(f"[lidar] trace failed: {e}")
-            time.sleep(1.0 / self._rate_hz)
-
-    # def _scan_once(self):
-    #     """做一次 ray tracing，转 base_link 系，写 data_proxies。"""
-    #     with self.mujoco_server.camera_manager.camera_lock:
-    #         mujoco.mj_copyData(self._lidar_mjdata, self.mujoco_server.mjmodel, self.mujoco_server.mjdata)
-
-            
-    #     self.lidar.trace_rays(
-    #         self.mujoco_server.mjdata, self.rays_theta, self.rays_phi
-    #     )
-    #     points = self.lidar.get_hit_points()
-    #     self.get_logger().info(
-    #         f"points: x=[{points[:,0].min():.2f}, {points[:,0].max():.2f}], "
-    #         f"y=[{points[:,1].min():.2f}, {points[:,1].max():.2f}], "
-    #         f"z=[{points[:,2].min():.2f}, {points[:,2].max():.2f}]"
-    #     )
-
-    #     # sensor -> world
-    #     world_points = (
-    #         points @ self.lidar.sensor_rotation.T + self.lidar.sensor_position
-    #     )
-
-    #     # world -> base_link
-    #     base_pts = self._world_to_base_link(world_points)
-
-    #     print(
-    #         f"base_pts: x=[{base_pts[:,0].min():.2f}, {base_pts[:,0].max():.2f}], "
-    #         f"y=[{base_pts[:,1].min():.2f}, {base_pts[:,1].max():.2f}], "
-    #         f"z=[{base_pts[:,2].min():.2f}, {base_pts[:,2].max():.2f}]"
-    #     )
-
-    #     # 写 data_proxies
-    #     self.mujoco_server.data_proxies.set_lidar_points(
-    #         base_pts.astype(np.float32)
-    #     )
     def _scan_once(self):
         with self.mujoco_server.camera_manager.camera_lock:
             mujoco.mj_copyData(self._lidar_mjdata, self.mujoco_server.mjmodel, self.mujoco_server.mjdata)
@@ -350,9 +309,35 @@ class LidarController:
         # p_base = R_base^T @ (p_world - base_pos)
         return (world_points - base_pos) @ base_mat
 
-    # def get_lock(self) -> threading.Lock:
-    #     """返回 mjdata 锁，供物理循环使用。"""
-    #     return self._mjdata_lock
+    def _publish_lidar(self, pts: np.ndarray):
+        """构造 PointCloud2 并通过 ZMQ 发布，topic='lidar'。"""
+        now = time.time()
+        msg = lidar_pb2.PointCloud2()
+        msg.header.stamp_sec = int(now)
+        msg.header.stamp_nsec = int((now - int(now)) * 1e9)
+        msg.header.frame_id = "world"
+        msg.height = 1
+        msg.width = len(pts)
+        msg.point_step = 12
+        msg.row_step = len(pts) * 12
+        msg.is_dense = True
+        msg.data = pts.astype(np.float32).tobytes()
+        self._pub.publish("lidar", msg.SerializeToString())
+
+    def _loop(self):
+        print("[lidar] thread started")
+        time.sleep(0.5)
+        while self._running and not self.mujoco_server._is_requested_to_stop():
+            try:
+                self._scan_once()
+                pts = self.mujoco_server.data_proxies.get_lidar_points()
+                print(f"[lidar] debug: pts={None if pts is None else pts.shape}, pub={self._pub is not None}")
+                if pts is not None and len(pts) > 0 and self._pub is not None:
+                    self._publish_lidar(pts)
+                    print(f"[lidar] published {len(pts)} points")
+            except Exception as e:
+                print(f"[lidar] trace failed: {e}")
+            time.sleep(1.0 / self._rate_hz)
 
 class MujocoServer:
     """
@@ -429,6 +414,12 @@ class MujocoServer:
 
         self.data_proxies = data_proxies
 
+        # ---- Stage 2: 唯一的 ZMQ 发布器，传给各 Controller ----
+        self.zmq_publisher = ZmqPublisher(
+            endpoint=os.environ.get("ZMQ_PUB_ENDPOINT", "tcp://*:5555")
+        )
+        print(f"[mujoco_server] ZMQ PUB bound to {self.zmq_publisher._endpoint}")    
+
         self.base_controller = BaseController(self)
 
         self.lidar_controller = LidarController(self)
@@ -453,43 +444,6 @@ class MujocoServer:
     def robot_settings(self):
         """Get the robot settings from config.py"""
         return config.robot_settings
-
-    # def update_joint_limits(self):
-    #     limits = {}
-    #     for i in range(self.mjmodel.njnt):
-    #         name = mujoco._functions.mj_id2name(self.mjmodel, mujoco._enums.mjtObj.mjOBJ_JOINT, i)
-    #         joint_range = self.mjmodel.jnt_range[i]  # This gives [lower_limit, upper_limit]
-    #         try:
-    #             actuator = Actuators.get_actuator_by_joint_names_in_mjcf(name)
-    #             if actuator not in limits:
-    #                 limits[actuator] = []
-    #             limits[actuator].append((joint_range[0], joint_range[1]))
-    #         except:
-    #             ...
-
-    #     for actuator, ranges in limits.items():
-    #         if actuator == Actuators.arm:
-    #             min_limit = 0.0
-    #             max_limit = sum(r[1] for r in ranges)
-    #         elif actuator == Actuators.gripper and not self.use_diff_drive:
-    #                 def get_angle_from_chord_length_and_radius(radius_m, chord_m):
-    #                     return 2 * np.arcsin(chord_m / (2 * radius_m))   # radians
-        
-    #                 max_limit = get_angle_from_chord_length_and_radius(
-    #                                         self.robot_settings['gripper_conversion']['finger_length_m'],
-    #                                         self.robot_settings['gripper_conversion']['aperture_open_m'],
-    #                                         )
-    #                 min_limit = get_angle_from_chord_length_and_radius(
-    #                                         self.robot_settings['gripper_conversion']['finger_length_m'],
-    #                                         self.robot_settings['gripper_conversion']['aperture_closed_m'],
-    #                                         )
-
-    #         else:
-    #             min_limit, max_limit = ranges[-1]
-
-    #         self.data_proxies.set_joint_limit(
-    #             actuator=actuator, min_max=(min_limit, max_limit)
-    #         )
 
 
     def update_joint_limits(self):
@@ -581,6 +535,11 @@ class MujocoServer:
             self.sensor_manager.sensors_thread.join()
 
         self.camera_manager.close()
+
+        if hasattr(self, "zmq_publisher") and self.zmq_publisher is not None:
+            self.zmq_publisher.close()
+            self.zmq_publisher = None
+            print("[mujoco_server] ZMQ PUB closed")        
 
     def _run_ui_simulation(self, show_viewer_ui: bool) -> None:
         """

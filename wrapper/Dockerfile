@@ -27,8 +27,18 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
+# Stage 2: 生成 proto
+COPY proto/ ./proto/
+RUN uv run python -m grpc_tools.protoc -I proto \
+    --python_out=aidea_mujoco/aidea_mujoco/msg \
+    proto/common.proto proto/lidar.proto proto/image.proto \
+    proto/imu.proto proto/joint_state.proto proto/pose.proto
+
+# 确保 msg 是包
+RUN touch aidea_mujoco/aidea_mujoco/msg/__init__.py
+
 # ZMQ + Protobuf + MCP
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv add pyzmq protobuf "mcp[cli]" uvicorn
 
-CMD ["python", "mcp_server.py", "--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uv", "run", "python", "run_sim.py"]

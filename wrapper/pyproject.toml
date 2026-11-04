@@ -15,8 +15,10 @@ dependencies = [
     "scipy",
     "opencv-python",
     "pynput",
-    "yourdfpy"
-
+    "yourdfpy",
+    "grpcio-tools>=1.85.1",
+    "pyzmq>=27.3.0",
+    "protobuf>=7.36.2",
 ]
 
 [tool.setuptools.packages.find]

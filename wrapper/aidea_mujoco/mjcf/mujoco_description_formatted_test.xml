@@ -1,0 +1,376 @@
+<mujoco model="robot_description_v2">
+  <compiler angle="radian" meshdir="assets/" texturedir="assets/"/>
+  <visual>
+    <!-- 将离屏缓冲区设置得大于等于你要渲染的分辨率 -->
+    <global offwidth="1280" offheight="720"/>
+    <quality shadowsize="4096"/>
+  </visual>
+
+  <default>
+    <default class="visual">
+      <geom group="2" type="mesh" contype="0" conaffinity="0"/>
+    </default>
+    <default class="collision">
+      <geom group="3" type="mesh"/>
+    </default>
+    <default class="wheel">
+      <geom group="2" type="mesh" contype="0" conaffinity="0"/>
+      <joint damping="30" frictionloss="1" armature="0.1" stiffness="0.02" />
+      <!-- <joint damping="1" frictionloss="0.1" armature="0.1" stiffness="0" /> -->
+      <velocity gear="3" kv="100" ctrlrange="-6 6" forcerange="-100 100"/>
+    </default>
+    <default class="arm">
+      <geom group="3" type="mesh" contype="0" conaffinity="0"/>
+      <!-- <joint damping="1" frictionloss="1" armature="0.1" stiffness="0.02"/> -->
+    </default>
+    <default class="arm_joint">
+      <joint damping="1000" armature="1.0" stiffness="0" frictionloss="0"/>
+    </default>
+    <default class="large_actuator">
+      <!-- <position kp="2000" kv="100" forcerange="-105 105"/> -->
+        <position kp="10" kv="10" forcerange="-100000 100000"/>
+    </default>
+    <default class="small_actuator">
+      <position kp="500" kv="50" forcerange="-52 52"/>
+    </default>
+
+  </default>
+
+  <!-- <extension>
+    <plugin plugin="mujoco.sensor.lidar"/>
+  </extension> -->
+
+
+
+  <asset>
+    <mesh name="base_link" content_type="model/stl" file="full/base_link.stl"/>
+    <mesh name="left_behind_wheel" content_type="model/stl" file="full/left_behind_wheel.stl"/>
+    <mesh name="right_behind_wheel" content_type="model/stl" file="full/right_behind_wheel.stl"/>
+    <mesh name="left_front_wheel" content_type="model/stl" file="full/left_front_wheel.stl"/>
+    <mesh name="right_front_wheel" content_type="model/stl" file="full/right_front_wheel.stl"/>
+    <mesh name="airy" content_type="model/stl" file="full/airy.stl"/>
+    <mesh name="fisheye" content_type="model/stl" file="full/fisheye.stl"/>
+    <mesh name="gripper_camera_mount" content_type="model/stl" file="full/gripper_camera_mount.stl"/>
+    <mesh name="camera" content_type="model/stl" file="full/camera.stl"/>
+    <mesh file="full/joint1/joint1.obj" scale="1.0 1.0 1.0"/>
+    <material name="material_joint1_0" texture="material_joint1_0" specular="0.4000000000000001" shininess="0.001"/>
+    <texture type="2d" name="material_joint1_0" file="full/joint1/material_joint1_0.png"/>
+    <mesh file="full/joint2/joint2.obj" scale="1.0 1.0 1.0"/>
+    <material name="material_joint2_0" texture="material_joint2_0" specular="0.4000000000000001" shininess="0.001"/>
+    <texture type="2d" name="material_joint2_0" file="full/joint2/material_joint2_0.png"/>
+    <mesh file="full/joint3/joint3.obj" scale="1.0 1.0 1.0"/>
+    <material name="material_joint3_0" texture="material_joint3_0" specular="0.4000000000000001" shininess="0.001"/>
+    <texture type="2d" name="material_joint3_0" file="full/joint3/material_joint3_0.png"/>
+    <mesh file="full/joint4/joint4.obj" scale="1.0 1.0 1.0"/>
+    <material name="material_joint4_0" texture="material_joint4_0" specular="0.4000000000000001" shininess="0.001"/>
+    <texture type="2d" name="material_joint4_0" file="full/joint4/material_joint4_0.png"/>
+    <mesh file="full/joint5/joint5.obj" scale="1.0 1.0 1.0"/>
+    <material name="material_joint5_0" texture="material_joint5_0" specular="0.4000000000000001" shininess="0.001"/>
+    <texture type="2d" name="material_joint5_0" file="full/joint5/material_joint5_0.png"/>
+    <mesh file="full/joint6/joint6.obj" scale="1.0 1.0 1.0"/>
+    <material name="material_joint6_0" texture="material_joint6_0" specular="0.4000000000000001" shininess="0.001"/>
+    <texture type="2d" name="material_joint6_0" file="full/joint6/material_joint6_0.png"/>
+    <mesh file="full/joint7/joint7.obj" scale="1.0 1.0 1.0"/>
+    <material name="material_joint7_0" texture="material_joint7_0" specular="0.4000000000000001" shininess="0.001"/>
+    <texture type="2d" name="material_joint7_0" file="full/joint7/material_joint7_0.png"/>
+    <mesh file="full/gripper_base/gripper_base.obj" scale="0.001 0.001 0.001"/>
+    <material name="material_gripper_base_0" specular="0.20000000000000004" shininess="1.0" rgba="0.98039216 0.98039216 0.98039216 1.0"/>
+    <mesh file="full/gripper_left1/gripper_left1.obj" scale="0.001 0.001 0.001"/>
+    <material name="material_gripper_left1_0" specular="0.20000000000000004" shininess="1.0" rgba="0.98039216 0.98039216 0.98039216 1.0"/>
+    <mesh file="full/gripper_left2/gripper_left2.obj" scale="0.001 0.001 0.001"/>
+    <material name="material_gripper_left2_0" specular="0.20000000000000004" shininess="1.0" rgba="0.98039216 0.98039216 0.98039216 1.0"/>
+    <mesh file="full/gripper_left3/gripper_left3.obj" scale="0.001 0.001 0.001"/>
+    <material name="material_gripper_left3_0" specular="0.20000000000000004" shininess="1.0" rgba="0.98039216 0.98039216 0.98039216 1.0"/>
+    <mesh file="full/gripper_right1/gripper_right1.obj" scale="0.001 0.001 0.001"/>
+    <material name="material_gripper_right1_0" specular="0.20000000000000004" shininess="1.0" rgba="0.98039216 0.98039216 0.98039216 1.0"/>
+    <mesh file="full/gripper_right2/gripper_right2.obj" scale="0.001 0.001 0.001"/>
+    <material name="material_gripper_right2_0" specular="0.20000000000000004" shininess="1.0" rgba="0.98039216 0.98039216 0.98039216 1.0"/>
+    <mesh file="full/gripper_right3/gripper_right3.obj" scale="0.001 0.001 0.001"/>
+    <material name="material_gripper_right3_0" specular="0.20000000000000004" shininess="1.0" rgba="0.98039216 0.98039216 0.98039216 1.0"/>
+  </asset>
+  <worldbody>
+    <body name="base_link" pos="0 0 0.02784">
+      <!-- <freejoint name="base_freejoint"/> -->
+      <joint name="joint_x"  type="slide" axis="1 0 0"/>
+      <joint name="joint_y"  type="slide" axis="0 1 0"/>
+      <joint name="joint_th" type="hinge" axis="0 0 1"/>
+      <inertial pos="0 0 0.05" mass="20" diaginertia="0.041 0.083 0.091"/>
+      <body name="left_behind_wheel" pos="-0.093063 0.060998 0.02266">
+        <!-- <inertial pos="1.1729e-06 0.025454 6.44e-08" quat="0.271656 0.652862 0.652829 0.271642" mass="0.26086" diaginertia="0.00028866 0.00017201 0.00017201"/> -->
+        <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+        <joint name="left_behind_wheel_joint" class="wheel" pos="0 0 0" axis="0 1 0"/>
+        <!-- <geom type="mesh" mesh="left_behind_wheel" class="collision"/> -->
+        <geom class="collision" type="cylinder" size=".05 .0125" quat="0.707105 0.707108 0 0"/>
+        <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="left_behind_wheel" class="visual"/>
+        <site name="left_behind_wheel" pos="0 0 0" quat="1.0 0 0 0"/>
+      </body>
+      <body name="right_behind_wheel" pos="-0.093063 -0.060998 0.02266">
+        <!-- <inertial pos="-1.0042e-06 -0.025454 6.1399e-07" quat="0.653292 0.270614 0.270617 0.653256" mass="0.26086" diaginertia="0.00028866 0.000172011 0.000172009"/> -->
+        <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+        <joint name="right_behind_wheel_joint" class="wheel" pos="0 0 0" axis="0 1 0"/>
+        <!-- <geom type="mesh" mesh="right_behind_wheel" class="collision"/> -->
+        <geom class="collision" type="cylinder" size=".05 .0125" quat="0.707105 0.707108 0 0"/>
+        <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="right_behind_wheel" class="visual"/>
+        <site name="right_behind_wheel" pos="0 0 0" quat="1.0 0 0 0"/>
+      </body>
+      <body name="left_front_wheel" pos="0.10693 0.060998 0.02266">
+        <!-- <inertial pos="-1.5817e-06 0.025454 1.1298e-06" quat="0.270593 0.65326 0.653287 0.27064" mass="0.26086" diaginertia="0.00028866 0.000172011 0.000172009"/> -->
+        <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+        <joint name="left_front_wheel_joint" class="wheel" pos="0 0 0" axis="0 1 0"/>
+        <!-- <geom type="mesh" mesh="left_front_wheel" class="collision"/> -->
+        <geom class="collision" type="cylinder" size=".05 .0125" quat="0.707105 0.707108 0 0"/>
+        <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="left_front_wheel" class="visual"/>
+        <site name="left_front_wheel" pos="0 0 0" quat="1.0 0 0 0"/>
+      </body>
+      <body name="right_front_wheel" pos="0.10693 -0.060998 0.02266">
+        <!-- <inertial pos="2.908e-07 -0.025454 1.1986e-06" quat="0.653306 -0.270528 -0.270498 0.653327" mass="0.26086" diaginertia="0.00028866 0.00017201 0.00017201"/> -->
+        <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+        <joint name="right_front_wheel_joint" class="wheel" pos="0 0 0" axis="0 1 0"/>
+        <!-- <geom type="mesh" mesh="right_front_wheel" class="collision"/> -->
+        <geom class="collision" type="cylinder" size=".05 .0125" quat="0.707105 0.707108 0 0"/>
+        <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="right_front_wheel" class="visual"/>
+        <site name="right_front_wheel" pos="0 0 0" quat="1.0 0 0 0"/>
+      </body>
+      <body name="joint2" pos="-0.028185 -0.0016001 0.60806" quat="0.707105 0 0 0.707108" gravcomp="1">
+        <inertial pos="0 0 0" mass="0.25" diaginertia="0.03 0.03 0.03"/>
+        <joint name="joint2_to_joint1" pos="0 0 0" axis="0 0 1" range="-2.9321 2.9321" actuatorfrcrange="-1000 1000"/>
+        <body name="joint3" quat="0.499998 0.500002 0.5 -0.5" gravcomp="1">
+          <inertial pos="0 0 0" mass="0.22" diaginertia="0.03 0.03 0.03"/>
+          <joint name="joint3_to_joint2" pos="0 0 0" axis="0 0 1" range="-2.4434 2.4434" actuatorfrcrange="-1000 1000"/>
+          <body name="joint4" pos="-0.1104 0 0" gravcomp="1">
+            <inertial pos="0 0 0" mass="0.18" diaginertia="0.03 0.03 0.03"/>
+            <joint name="joint4_to_joint3" pos="0 0 0" axis="0 0 1" range="-2.6179 2.6179" actuatorfrcrange="-1000 1000"/>
+            <body name="joint5" pos="-0.096 0 0.06462" quat="0.707105 0 0 -0.707108" gravcomp="1">
+              <inertial pos="0 0 0" mass="0.15" diaginertia="0.03 0.03 0.03"/>
+              <joint name="joint5_to_joint4" pos="0 0 0" axis="0 0 1" range="-2.6179 2.6179" actuatorfrcrange="-1000 1000"/>
+              <body name="joint6" pos="0 -0.07318 0" quat="0.499998 0.5 -0.5 0.500002" gravcomp="1">
+                <inertial pos="0 0 0" mass="0.12" diaginertia="0.03 0.03 0.03"/>
+                <joint name="joint6_to_joint5" pos="0 0 0" axis="0 0 1" range="-2.7052 2.7925" actuatorfrcrange="-1000 1000"/>
+                <body name="joint6_flange" pos="0 0.0456 0" quat="0.707105 -0.707108 0 0" gravcomp="1">
+                  <inertial pos="0.00451622 -0.00288478 0.00399651" quat="0.715886 -0.118079 -0.111851 0.67901" mass="0.1" diaginertia="0.060356 0.0603399 0.0600433"/>
+                  <joint name="joint6output_to_joint6" pos="0 0 0" axis="0 0 1" range="-3.14 3.14159" actuatorfrcrange="-1000 1000"/>
+                  <geom material="material_joint7_0" mesh="joint7" class="visual" pos="0 0 -0.012" quat="1 0 0 0"/>
+                  <geom mesh="joint7" class="arm" pos="0 0 -0.012" quat="1 0 0 0"/>
+                  <geom material="material_gripper_base_0" mesh="gripper_base" class="visual" pos="-0.00157383 -0.0146862 0.036586" quat="3.53554e-06 9.38184e-07 0.707104 0.70711"/>
+                  <geom mesh="gripper_base" class="arm" pos="-0.00157383 -0.0146862 0.036586" quat="3.53554e-06 9.38184e-07 0.707104 0.70711"/>
+                  <!-- <geom pos="-0.001525 -0.02564 0.001766" quat="0.5 0.5 -0.500003 0.499997" type="mesh" mesh="gripper_camera_mount" class="arm"/> -->
+                  <geom pos="-0.001525 -0.02564 0.001766" quat="0.5 0.5 -0.500003 0.499997" type="mesh" mesh="gripper_camera_mount" class="collision"/>
+                  <geom pos="-0.001525 -0.02564 0.001766" quat="0.5 0.5 -0.500003 0.499997" type="mesh" rgba="0.8 0.8 0.8 1" mesh="gripper_camera_mount" class="visual"/>
+                  <!-- <geom pos="-0.00406465 -0.0488422 0.0317659" quat="3.16341e-06 -1.8366e-06 -1.32679e-06 1" type="mesh" mesh="camera" class="arm"/> -->
+
+                  <body name="realsense_depth" pos="-0.00406465 -0.0488422 0.0317659" quat="3.16341e-06 -1.8366e-06 -1.32679e-06 1">
+                    <camera name="realsense_depth" fovy="60"/>
+                    <site name="realsense_site" pos="0 0 0" quat="1 0 0 0"/>
+                    <geom type="mesh" mesh="camera" class="collision"/>
+                    <geom type="mesh" rgba="1 1 1 1" mesh="camera" class="visual"/>
+                  </body>
+
+                  <body name="gripper_left3" pos="-0.012 -4.10179e-05 0.0389998" quat="0.7042 0.710001 0 0">
+                    <inertial pos="0 0 0" mass="0.1" diaginertia="0.03 0.03 0.03"/>
+                    <joint name="gripper_controller" pos="0 0 0" axis="0 0 1" range="-0.74 0.15" actuatorfrcrange="-1000 1000"/>
+                    <body name="gripper_left1" pos="-0.027 0.016 0">
+                      <inertial pos="0 0 0" mass="0.1" diaginertia="0.03 0.03 0.03"/>
+                      <joint name="gripper_left3_to_gripper_left1" pos="0 0 0" axis="0 0 1" range="-0.5 0.5" actuatorfrcrange="-1000 1000"/>
+                      <geom material="material_gripper_left1_0" mesh="gripper_left1" class="visual" pos="0.039 -0.0133 -0.012" quat="1 0 0 0"/>
+                      <geom mesh="gripper_left1" class="arm" pos="0.039 -0.0133 -0.012" quat="1 0 0 0"/>
+                      <site name="gripper_left1" pos="0 0 0" quat="1.0 0 0 0"/>
+                    </body>
+                    <geom material="material_gripper_left3_0" mesh="gripper_left3" class="visual" pos="0.012 0.0025 -0.012" quat="1 0 0 0"/>
+                    <geom mesh="gripper_left3" class="arm" pos="0.012 0.0025 -0.012" quat="1 0 0 0"/>
+                    <site name="gripper_left3" pos="0 0 0" quat="1.0 0 0 0"/>
+                  </body>
+                  <body name="gripper_left2" pos="-0.005 -0.000221497 0.0609991" quat="0.7042 0.710001 0 0">
+                    <inertial pos="0 0 0" mass="0.1" diaginertia="0.03 0.03 0.03"/>
+                    <joint name="gripper_base_to_gripper_left2" pos="0 0 0" axis="0 0 1" range="-0.8 0.5" actuatorfrcrange="-1000 1000"/>
+                    <geom material="material_gripper_left2_0" mesh="gripper_left2" class="visual" pos="0.005 -0.0195 -0.012" quat="1 0 0 0"/>
+                    <geom mesh="gripper_left2" class="arm" pos="0.005 -0.0195 -0.012" quat="1 0 0 0"/>
+                    <site name="gripper_left2" pos="0 0 0" quat="1.0 0 0 0"/>
+                  </body>
+                  <body name="gripper_right3" pos="0.012 -4.10179e-05 0.0389998" quat="0.7042 0.710001 0 0">
+                    <inertial pos="0 0 0" mass="0.1" diaginertia="0.03 0.03 0.03"/>
+                    <joint name="gripper_base_to_gripper_right3" pos="0 0 0" axis="0 0 1" range="-0.15 0.7" actuatorfrcrange="-1000 1000"/>
+                    <body name="gripper_right1" pos="0.027 0.016 0">
+                      <inertial pos="0 0 0" mass="0.1" diaginertia="0.03 0.03 0.03"/>
+                      <joint name="gripper_right3_to_gripper_right1" pos="0 0 0" axis="0 0 1" range="-0.5 0.5" actuatorfrcrange="-1000 1000"/>
+                      <geom material="material_gripper_right1_0" mesh="gripper_right1" class="visual" pos="-0.039 -0.0133 -0.012" quat="1 0 0 0"/>
+                      <geom mesh="gripper_right1" class="arm" pos="-0.039 -0.0133 -0.012" quat="1 0 0 0"/>
+                      <site name="gripper_right1" pos="0 0 0" quat="1.0 0 0 0"/>
+                    </body>
+                    <geom material="material_gripper_right3_0" mesh="gripper_right3" class="visual" pos="-0.012 0.0025 -0.012" quat="1 0 0 0"/>
+                    <geom mesh="gripper_right3" class="arm" pos="-0.012 0.0025 -0.012" quat="1 0 0 0"/>
+                    <site name="gripper_right3" pos="0 0 0" quat="1.0 0 0 0"/>
+                  </body>
+                  <body name="gripper_right2" pos="0.005 -0.000221497 0.0609991" quat="0.7042 0.710001 0 0">
+                    <inertial pos="0 0 0" mass="0.1" diaginertia="0.03 0.03 0.03"/>
+                    <joint name="gripper_base_to_gripper_right2" pos="0 0 0" axis="0 0 1" range="-0.5 0.8" actuatorfrcrange="-1000 1000"/>
+                    <geom material="material_gripper_right2_0" mesh="gripper_right2" class="visual" pos="-0.005 -0.0195 -0.012" quat="1 0 0 0"/>
+                    <geom mesh="gripper_right2" class="arm" pos="-0.005 -0.0195 -0.012" quat="1 0 0 0"/>                    <!-- <geom type="box" size="0.1 0.1 0.1" density="0" contype="0" conaffinity="0" rgba="0.9 0.3 0.3 0.2"/> -->
+                    <site name="gripper_right2" pos="0 0 0" quat="1.0 0 0 0"/>
+                  </body>                
+                  <site name="joint6_flange" pos="0 0 0" quat="1.0 0 0 0"/>
+                  <site name="gripper_camera_mount" pos="-0.001525 -0.02564 0.001766" quat="-0.49999999999419015 -0.49999999999419015 0.5000031633932511 -0.4999968365983545"/>
+                  <site name="gripper_base" pos="-0.0015737497755581684 -0.002686219990568478 0.03658614522455397" quat="3.5355403992948975e-06 9.381839455977111e-07 0.7071036061333409 0.7071099562160363"/>
+                  <site name="camera" pos="-0.0040646467949415534 -0.04884217373602252 0.531765853205147014" quat="3.163406631339284e-06 -1.8365983544646468e-06 -1.3267890867802475e-06 0.9999999999924297"/>
+                </body>
+                <geom material="material_joint6_0" mesh="joint6" class="visual" pos="0 0 -0.038" quat="1 0 0 0"/>
+                <geom mesh="joint6" class="arm" pos="0 0 -0.038" quat="1 0 0 0"/>
+                <site name="joint6" pos="0 0 0" quat="1.0 0 0 0"/>
+              </body>
+              <geom material="material_joint5_0" mesh="joint5" class="visual" pos="0 0 -0.03356" quat="0.707105 -0.707108 0 0"/>
+              <geom mesh="joint5" class="arm" pos="0 0 -0.03356" quat="0.707105 -0.707108 0 0"/>
+              <site name="joint5" pos="0 0 0" quat="1.0 0 0 0"/>
+            </body>
+            <geom material="material_joint4_0" mesh="joint4" class="visual" pos="0 0 0.03056" quat="0.707105 0 -0.707108 0"/>
+            <geom mesh="joint4" class="arm" pos="0 0 0.03056" quat="0.707105 0 -0.707108 0"/>
+            <site name="joint4" pos="0 0 0" quat="1.0 0 0 0"/>
+          </body>
+          <geom material="material_joint3_0" mesh="joint3" class="visual" pos="0 0 0.03256" quat="0.707105 0 -0.707108 0"/>
+          <geom mesh="joint3" class="arm" pos="0 0 0.03256" quat="0.707105 0 -0.707108 0"/>
+          <site name="joint3" pos="0 0 0" quat="1.0 0 0 0"/>
+        </body>
+        <geom material="material_joint2_0" mesh="joint2" class="visual" pos="0 0 -0.06096" quat="0.707105 0 0 -0.707108"/>
+        <geom mesh="joint2" class="arm" pos="0 0 -0.06096" quat="0.707105 0 0 -0.707108"/>
+        <site name="joint2" pos="0 0 0" quat="1.0 0 0 0"/>
+      </body>
+      <geom material="material_joint1_0" mesh="joint1" class="visual" pos="-0.028185 -0.0016001 0.4765" quat="1 0 0 0"/>
+      <geom mesh="joint1" class="arm" pos="-0.028185 -0.0016001 0.4765" quat="1 0 0 0"/>
+
+      <geom type="mesh" mesh="base_link" class="collision"/>
+      <!-- <geom group="2" pos="0.08 -0.0013198 0.44" type="box" size="0.1 0.12 0.1"/> -->
+      <!-- <geom group="2" pos="0.08 -0.0013198 0.1" type="box" size="0.1 0.12 0.06"/> -->
+      <geom type="mesh" rgba="0.79216 0.81961 0.93333 1" mesh="base_link" class="visual"/>
+
+      <body name="imu" pos="0.00 -0.0013198 0.1">
+        <geom group="2" type="box" size="0.02 0.02 0.005"/>
+        <site name="imu_site" pos="0 0 0" quat="1.0 0 0 0"/>
+      </body>
+
+      <body name="airy" pos="0.03155 -0.0013198 0.25402" quat="0.0124759 0.706997 0.0124811 0.706997">
+        <site name="lidar_site" pos="0 0 0" quat="1 0 0 0" size="0.001" type="sphere"/>
+        <!-- <geom type="box" size="0.1 0.1 0.1" density="0" contype="0" conaffinity="0" rgba="0.9 0.3 0.3 0.2"/> -->
+        <!-- <geom group="3" type="mesh" mesh="airy" rgba="0.75294 0.75294 0.75294 1" contype="0" conaffinity="0"/>
+        <geom group="3" type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="airy" class="visual"/> -->
+        <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="airy" class="visual"/>
+        <geom type="mesh" rgba="0.75294 0.75294 0.75294 1" mesh="airy" class="collision"/>
+      </body>
+
+      <body name="fisheye" pos="-0.03495 -0.001876 0.77537" quat="0.7071054825112363 0 0.7071080798594737 0">
+        <geom type="mesh" mesh="fisheye" class="collision"/>
+        <geom type="mesh" rgba="1 1 1 1" mesh="fisheye" class="visual"/>
+      </body>
+
+      <!-- <camera name="head_camera" pos="-0.03495 -0.001876 1.2" euler="0 -1.5708 0" fovy="60"/> -->
+      <camera name="head_camera" pos="-0.03495 -0.001876 1.2" xyaxes="0 -1 0 0 0 1" fovy="60"/>
+
+      <site name="base_link" pos="0 0 0" quat="1.0 0 0 0"/>
+      <site name="fisheye" pos="-0.03495 -0.001876 0.77537" quat="0.7071054825112363 0 0.7071080798594737 0"/>
+      <site name="joint1" pos="-0.028185 -0.0016001 0.4765" quat="0.7071054825112363 0 0 0.7071080798594737"/>
+    </body>  
+  </worldbody>
+
+  <contact>
+ 
+    <exclude body1="left_behind_wheel" body2="base_link"/>
+    <exclude body1="left_front_wheel" body2="base_link"/>
+    <exclude body1="right_behind_wheel" body2="base_link"/>
+    <exclude body1="right_front_wheel" body2="base_link"/>
+    <exclude body1="base_link" body2="joint2"/>
+    <exclude body1="base_link" body2="airy"/>
+    <exclude body1="base_link" body2="fisheye"/>
+    
+    <exclude body1="joint2" body2="joint3"/>
+    <exclude body1="joint3" body2="joint4"/>
+    <exclude body1="joint4" body2="joint5"/>
+    <exclude body1="joint5" body2="joint6"/>
+    <exclude body1="joint6" body2="joint6_flange"/>
+
+    <exclude body1="joint2" body2="fisheye"/>
+    <exclude body1="joint3" body2="fisheye"/>
+    <exclude body1="joint4" body2="fisheye"/>
+    <exclude body1="joint5" body2="fisheye"/>
+    <exclude body1="joint6" body2="fisheye"/>    
+
+
+
+    <exclude body1="joint6_flange" body2="gripper_left3"/>
+    <exclude body1="joint6_flange" body2="gripper_left2"/>
+    <exclude body1="gripper_left3" body2="gripper_left1"/>
+
+    <exclude body1="joint6_flange" body2="gripper_right3"/>
+    <exclude body1="joint6_flange" body2="gripper_right2"/>
+    <exclude body1="gripper_right3" body2="gripper_right1"/>
+
+    <exclude body1="gripper_left2"  body2="gripper_left3"/>
+    <exclude body1="gripper_left1"  body2="gripper_left2"/>
+    <exclude body1="gripper_right2" body2="gripper_right3"/>
+    <exclude body1="gripper_right1" body2="gripper_right2"/>
+    <exclude body1="gripper_left2"  body2="gripper_right2"/>
+    <exclude body1="gripper_left3"  body2="gripper_right3"/>
+
+  </contact>
+
+  <actuator>
+    <!-- <velocity name="left_behind_wheel" joint="left_behind_wheel_joint" class="wheel"/>
+    <velocity name="left_front_wheel" joint="left_front_wheel_joint" class="wheel"/>
+    <velocity name="right_behind_wheel" joint="right_behind_wheel_joint" class="wheel"/>
+    <velocity name="right_front_wheel" joint="right_front_wheel_joint" class="wheel"/> -->
+
+    <velocity name="joint_x"  joint="joint_x"  kv="10000" ctrlrange="-10 10" forcerange="-100000 100000"/>
+    <velocity name="joint_y"  joint="joint_y"  kv="1000" ctrlrange="-10 10" forcerange="-1000 1000"/>
+    <velocity name="joint_th" joint="joint_th" kv="1000" ctrlrange="-10 10" forcerange="-1000 1000"/>
+
+    <position class="large_actuator" name="joint2_to_joint1" joint="joint2_to_joint1" ctrlrange="-2.9321 2.9321"/>
+    <position class="large_actuator" name="joint3_to_joint2" joint="joint3_to_joint2" ctrlrange="-2.4434 2.4434"/>
+    <position class="large_actuator" name="joint4_to_joint3" joint="joint4_to_joint3" ctrlrange="-2.6179 2.6179"/>
+    <position class="large_actuator" name="joint5_to_joint4" joint="joint5_to_joint4" ctrlrange="-2.6179 2.6179"/>
+    <position class="large_actuator" name="joint6_to_joint5" joint="joint6_to_joint5" ctrlrange="-2.7052 2.7925"/>
+    <position class="large_actuator" name="joint6output_to_joint6" joint="joint6output_to_joint6" ctrlrange="-3.14 3.14159"/>
+
+    <position tendon="split" name="gripper_controller" kp="1000" dampratio="3.0" ctrlrange="-50 50"/>
+
+  </actuator>
+
+  <tendon>
+    <fixed name="split">
+      <joint joint="gripper_controller" coef="0.5"/>
+      <joint joint="gripper_base_to_gripper_right3" coef="-0.5"/>
+    </fixed>
+  </tendon>
+
+  <equality>
+    <joint joint1="gripper_controller" joint2="gripper_base_to_gripper_right3" polycoef="0 -1 0 0 0" solimp="0.95 0.99 0.001" solref="0.005 1"/>
+
+    <connect anchor="0 0 0" body1="gripper_left3"  body2="gripper_left1"
+            solimp="0.95 0.99 0.001" solref="0.005 1"/>
+    <connect anchor="0 0 0" body1="gripper_left2"  body2="gripper_left1"
+            solimp="0.95 0.99 0.001" solref="0.005 1"/>
+    <connect anchor="0 0 0" body1="gripper_right3" body2="gripper_right1"
+            solimp="0.95 0.99 0.001" solref="0.005 1"/>
+    <connect anchor="0 0 0" body1="gripper_right2" body2="gripper_right1"
+            solimp="0.95 0.99 0.001" solref="0.005 1"/>
+  </equality>
+
+  <sensor>
+    <!-- 加速度计：测量局部坐标系下的线性加速度 -->
+    <accelerometer name="imu_acc" site="imu_site" noise="0.01"/>
+    
+    <!-- 陀螺仪：测量局部坐标系下的角速度 -->
+    <gyro name="imu_gyro" site="imu_site" noise="0.005"/>
+    
+    <!-- 姿态四元数：提供 IMU 相对于世界坐标系的朝向 -->
+    <framequat name="imu_quat" objtype="site" objname="imu_site"/>
+  </sensor>
+
+</mujoco>
+  <!-- <sensor>
+    <plugin name="lidar" plugin="mujoco.plugin.lidar" objtype="site" objname="lidar_sensor">
+      <config key="size" value="360 10"/>          <!-- 水平360束，垂直10束 -->
+      <config key="fov" value="6.2832 0.7854"/>     <!-- 水平360°，垂直45° (弧度) -->
+      <config key="max_range" value="13.0"/>        <!-- 最大测距13米 -->
+      <config key="min_range" value="0.5"/>         <!-- 最小测距0.5米 -->
+      <config key="update_rate" value="10.0"/>      <!-- 更新频率10Hz -->
+    </plugin>
+  </sensor> -->
+
+
+</mujoco>

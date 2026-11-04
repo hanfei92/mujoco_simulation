@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package aidea.imu;
+
+message Header {
+  int64 stamp_sec = 1;
+  int64 stamp_nsec = 2;
+  string frame_id = 3;
+}
+
+// 对齐 sensor_msgs/Imu
+message Imu {
+  Header header = 1;
+
+  // orientation 四元数 (x, y, z, w)
+  double orientation_x = 2;
+  double orientation_y = 3;
+  double orientation_z = 4;
+  double orientation_w = 5;
+
+  // 角速度 rad/s
+  double angular_velocity_x = 6;
+  double angular_velocity_y = 7;
+  double angular_velocity_z = 8;
+
+  // 线加速度 m/s^2
+  double linear_acceleration_x = 9;
+  double linear_acceleration_y = 10;
+  double linear_acceleration_z = 11;
+}
