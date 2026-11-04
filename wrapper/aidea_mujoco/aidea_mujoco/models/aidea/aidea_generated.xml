@@ -1,0 +1,217 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mujoco model="aidea">
+  <compiler meshdir="../assets/"/>
+  <asset>
+    <!-- <material name="" rgba="1 1 1 1" /> -->
+    <material name="default_material" rgba="0.7 0.7 0.7 1" />
+    <material name="collision_material" rgba="1.0 0.28 0.1 0.9" />
+    <mesh name="base_collision_link" file="base_collision_link.STL" />
+    <mesh name="base_link" file="base_link.STL" />
+    <mesh name="left_behind_wheel_collision_link" file="left_behind_wheel_collision_link.STL" />
+    <mesh name="left_behind_wheel_link" file="left_behind_wheel_link.STL" />
+    <mesh name="right_behind_wheel_collision_link" file="right_behind_wheel_collision_link.STL" />
+    <mesh name="right_behind_wheel_link" file="right_behind_wheel_link.STL" />
+    <mesh name="left_front_wheel_collision_link" file="left_front_wheel_collision_link.STL" />
+    <mesh name="left_front_wheel_link" file="left_front_wheel_link.STL" />
+    <mesh name="right_front_wheel_collision_link" file="right_front_wheel_collision_link.STL" />
+    <mesh name="right_front_wheel_link" file="right_front_wheel_link.STL" />
+    <mesh name="airy_collision_link" file="airy_collision_link.STL" />
+    <mesh name="airy_link" file="airy_link.STL" />
+    <mesh name="fisheye_collision_link" file="fisheye_collision_link.STL" />
+    <mesh name="fisheye_link" file="fisheye_link.STL" />
+
+    <mesh name="joint1_collision_link" file="joint1_collision_link.STL" />
+    <mesh name="joint1_link" file="joint1/joint1.obj" />
+    <mesh name="joint2_collision_link" file="joint2_collision_link.STL" />
+    <mesh name="joint2_link" file="joint2/joint2.obj" />
+    <mesh name="joint3_collision_link" file="joint3_collision_link.STL" />
+    <mesh name="joint3_link" file="joint3/joint3.obj" />
+    <mesh name="joint4_collision_link" file="joint4_collision_link.STL" />
+    <mesh name="joint4_link" file="joint4/joint4.obj" />
+    <mesh name="joint5_collision_link" file="joint5_collision_link.STL" />
+    <mesh name="joint5_link" file="joint5/joint5.obj" />
+    <mesh name="joint6_collision_link" file="joint6_collision_link.STL" />
+    <mesh name="joint6_link" file="joint6/joint6.obj" />
+    <mesh name="joint7_collision_link" file="joint7_collision_link.STL" />
+    <mesh name="joint7_link" file="joint7/joint7.obj" />
+    <mesh name="gripper_camera_mount_collision_link" file="gripper_camera_mount_collision_link.STL" />
+    <mesh name="gripper_camera_mount_link" file="gripper_camera_mount_link.STL" />
+    
+    <mesh name="gripper_base_collision_link" file="gripper_base_collision_link.STL" />
+    <mesh name="gripper_base_link" file="gripper_base/gripper_base.obj" scale="0.001 0.001 0.001"/>
+    <mesh name="gripper_l3_collision_link" file="gripper_l3_collision_link.STL" />
+    <mesh name="gripper_l3_link" file="gripper_l3/gripper_left3.obj" scale="0.001 0.001 0.001"/>
+    <mesh name="gripper_l1_collision_link" file="gripper_l1_collision_link.STL" />
+    <mesh name="gripper_l1_link" file="gripper_l1/gripper_left1.obj" scale="0.001 0.001 0.001"/>
+    <mesh name="gripper_l2_collision_link" file="gripper_l2_collision_link.STL" />
+    <mesh name="gripper_l2_link" file="gripper_l2/gripper_left2.obj" scale="0.001 0.001 0.001"/>
+    <mesh name="gripper_r3_collision_link" file="gripper_r3_collision_link.STL" />
+    <mesh name="gripper_r3_link" file="gripper_r3/gripper_right3.obj" scale="0.001 0.001 0.001"/>
+    <mesh name="gripper_r1_collision_link" file="gripper_r1_collision_link.STL" />
+    <mesh name="gripper_r1_link" file="gripper_r1/gripper_right1.obj" scale="0.001 0.001 0.001"/>
+    <mesh name="gripper_r2_collision_link" file="gripper_r2_collision_link.STL" />
+    <mesh name="gripper_r2_link" file="gripper_r2/gripper_right2.obj" scale="0.001 0.001 0.001"/>
+
+    <mesh name="camera_collision_link" file="camera_collision_link.STL" />
+    <mesh name="camera_link" file="camera_link.STL" />
+  </asset>
+  <worldbody>
+    <body name="aidea" pos="0.00000000 0.00000000 0.02784000" quat="1 0 0 0">
+      <freejoint name="floating_base" />
+      <geom name="base_footprint_visual" pos="0 0 0" quat="1.0 0.0 0.0 0.0" type="box" size="0.0005 0.0005 0.0005" class="visualgeom" />
+      <body name="base_link" pos="0 0 0.028" quat="1.0 0.0 0.0 0.0">
+        <inertial pos="-0.004495 -0.00089865 0.30089" quat="1.0 0.0 0.0 0.0" mass="4.2685" diaginertia="0.057276 0.044181 0.051433" />
+        <geom name="base_link_collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" type="mesh" mesh="base_collision_link" class="collision" />
+        <geom name="base_link_visual" pos="0 0 0" quat="1.0 0.0 0.0 0.0" type="mesh" mesh="base_link" class="visualgeom" />
+
+        <body name="left_behind_wheel_link" pos="-0.093063 0.060998 0.02266" quat="0.707105 0.707108 0 0">
+          <!-- <inertial pos="1.17e-06 0.025454 6.44e-08" quat="1 0 0 0" mass="0.26086"
+                    diaginertia="0.00028866 0.00017201 0.00017201"/> -->
+          <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+          <joint name="left_behind_wheel_joint"/>
+          <geom type="mesh" mesh="left_behind_wheel_link" class="visualgeom" rgba="0.75294 0.75294 0.75294 1"/>
+          <geom name="left_behind_wheel_link" class="omniwheel_collision"/>
+        </body>
+        <body name="right_behind_wheel_link" pos="-0.093063 -0.060998 0.02266" quat="0.707105 0.707108 0 0">
+          <!-- <inertial pos="-1.00e-06 -0.025454 6.14e-07" quat="1 0 0 0" mass="0.26086"
+                    diaginertia="0.00017201 0.00028866 0.00017201"/> -->
+          <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+          <joint name="right_behind_wheel_joint"/>
+          <geom type="mesh" mesh="right_behind_wheel_link" class="visualgeom" rgba="0.75294 0.75294 0.75294 1"/>
+          <geom name="right_behind_wheel_link" class="omniwheel_collision"/>
+        </body>
+        <body name="left_front_wheel_link" pos="0.10693 0.060998 0.02266" quat="0.707105 0.707108 0 0">
+          <!-- <inertial pos="1.17e-06 0.025454 6.44e-08" quat="1 0 0 0" mass="0.26086"
+                    diaginertia="0.00028866 0.00017201 0.00017201"/> -->
+          <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+          <joint name="left_front_wheel_joint"/>
+          <geom type="mesh" mesh="left_front_wheel_link" class="visualgeom" rgba="0.75294 0.75294 0.75294 1"/>
+          <geom name="left_front_wheel_link" class="omniwheel_collision"/>
+        </body>
+        <body name="right_front_wheel_link" pos="0.10693 -0.060998 0.02266" quat="0.707105 0.707108 0 0">
+          <!-- <inertial pos="1.17e-06 0.025454 6.44e-08" quat="1 0 0 0" mass="0.26086"
+                    diaginertia="0.00028866 0.00017201 0.00017201"/> -->
+          <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+          <joint name="right_front_wheel_joint"/>
+          <geom type="mesh" mesh="right_front_wheel_link" class="visualgeom" rgba="0.75294 0.75294 0.75294 1"/>
+          <geom name="right_front_wheel_link" class="omniwheel_collision"/>
+        </body>
+        
+        <body name="airy_link" pos="0.03155 -0.0013198 0.25402" quat="0.012475891293038943 0.7069966671240959 0.012481085180570395 0.7069966671240959">
+          <inertial pos="-0.00019019 6.2106E-07 0.027552" quat="1.0 0.0 0.0 0.0" mass="0.15063" diaginertia="4.5255e-05 4.5069e-05 6.1719e-05" />
+          <geom name="airy_link_collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" type="mesh" mesh="airy_collision_link" class="collision" />
+          <geom name="airy_link_visual" pos="0 0 0" quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="airy_link" class="visualgeom" />
+          <camera name="airy_camera" pos="0.03155 -0.0013198 0.25402" quat="-0.706996667124096 0.012475891293038903 0.706996667124096 -0.012481085180570308" />
+        </body>
+        <body name="fisheye_link" pos="-0.03495 -0.001876 0.77537" quat="0.7071054825112363 0.0 0.7071080798594735 0.0">
+          <inertial pos="1.5876E-14 -1.3181E-09 -0.020756" quat="1.0 0.0 0.0 0.0" mass="0.021596" diaginertia="3.0792e-06 3.0792e-06 3.8584e-06" />
+          <geom name="fisheye_link_collision" pos="0 0 0" quat="1.0 0.0 0.0 0.0" type="mesh" mesh="fisheye_collision_link" class="collision" />
+          <geom name="fisheye_link_visual" pos="0 0 0" quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="fisheye_link" class="visualgeom" />
+          <camera name="fisheye_camera" pos="-0.03495 -0.001876 0.77537" quat="-4.3297723290846504e-17 -0.7071054825112362 -4.329788233255677e-17 0.7071080798594735" />
+        </body>
+        <body name="joint1_link" pos="-0.028185 -0.0016001 0.4765" quat="0.7071054825112363 0.0 0.0 0.7071080798594735" gravcomp="1">
+          <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.1" diaginertia="0.03 0.03 0.03" />
+          <geom name="joint1_link_collision" pos="0 0 0" quat="0.7071054825112363 0.0 0.0 -0.7071080798594735" type="mesh" mesh="joint1_collision_link" class="collision" />
+          <geom name="joint1_link_visual" pos="0 0 0" quat="0.7071054825112363 0.0 0.0 -0.7071080798594735"  type="mesh" mesh="joint1_link" class="visualgeom" />
+          <body name="joint2_link" pos="0 0 0.13156" quat="1.0 0.0 0.0 0.0" gravcomp="1">
+            <joint name="joint2_to_joint1_joint" type="hinge" ref="0.0" class="mycobot_j1" range="-2.9321 2.9321" axis="0 0 1" />
+            <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.1" diaginertia="0.03 0.03 0.03" />
+            <geom name="joint2_link_collision" pos="0 0 -0.06096" quat="0.7071054825112363 0.0 0.0 -0.7071080798594735" type="mesh" mesh="joint2_collision_link" class="collision" />
+            <geom name="joint2_link_visual" pos="0 0 -0.06096" quat="0.7071054825112363 0.0 0.0 -0.7071080798594735"  type="mesh" mesh="joint2_link" class="visualgeom" />
+            <body name="joint3_link" pos="0 0 0" quat="0.4999981633974483 0.5000018366025516 0.49999999999662686 -0.49999999999662686" gravcomp="1">
+              <joint name="joint3_to_joint2_joint" type="hinge" ref="0.0" class="mycobot_j2" range="-2.4434 2.4434" axis="0 0 1" />
+              <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.1" diaginertia="0.03 0.03 0.03" />
+              <geom name="joint3_link_collision" pos="0 0 0.03256" quat="0.7071054825112363 0.0 -0.7071080798594735 0.0" type="mesh" mesh="joint3_collision_link" class="collision" />
+              <geom name="joint3_link_visual" pos="0 0 0.03256" quat="0.7071054825112363 0.0 -0.7071080798594735 0.0"  type="mesh" mesh="joint3_link" class="visualgeom" />
+              <body name="joint4_link" pos="-0.1104 0 0" quat="1.0 0.0 0.0 0.0" gravcomp="1">
+                <joint name="joint4_to_joint3_joint" type="hinge" ref="0.0" class="mycobot_j3" range="-2.6179 2.6179" axis="0 0 1" />
+                <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.1" diaginertia="0.03 0.03 0.03" />
+                <geom name="joint4_link_collision" pos="0 0 0.03056" quat="0.7071054825112363 0.0 -0.7071080798594735 0.0" type="mesh" mesh="joint4_collision_link" class="collision" />
+                <geom name="joint4_link_visual" pos="0 0 0.03056" quat="0.7071054825112363 0.0 -0.7071080798594735 0.0"  type="mesh" mesh="joint4_link" class="visualgeom" />
+                <body name="joint5_link" pos="-0.096 0 0.06462" quat="0.7071054825112363 0.0 0.0 -0.7071080798594735" gravcomp="1">
+                  <joint name="joint5_to_joint4_joint" type="hinge" ref="0.0" class="mycobot_j4" range="-2.6179 2.6179" axis="0 0 1" />
+                  <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.1" diaginertia="0.03 0.03 0.03" />
+                  <geom name="joint5_link_collision" pos="0 0 -0.03356" quat="0.7071054825112363 -0.7071080798594735 0.0 0.0" type="mesh" mesh="joint5_collision_link" class="collision" />
+                  <geom name="joint5_link_visual" pos="0 0 -0.03356" quat="0.7071054825112363 -0.7071080798594735 0.0 0.0"  type="mesh" mesh="joint5_link" class="visualgeom" />
+                  <body name="joint6_link" pos="0 -0.07318 0" quat="0.4999981633974483 0.49999999999662686 -0.49999999999662686 0.5000018366025516" gravcomp="1">
+                    <joint name="joint6_to_joint5_joint" type="hinge" ref="0.0" class="mycobot_j5" range="-2.7052 2.7925" axis="0 0 1" />
+                    <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.1" diaginertia="0.03 0.03 0.03" />
+                    <geom name="joint6_link_collision" pos="0 0 -0.038" quat="1.0 0.0 0.0 0.0" type="mesh" mesh="joint6_collision_link" class="collision" />
+                    <geom name="joint6_link_visual" pos="0 0 -0.038" quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="joint6_link" class="visualgeom" />
+                    <body name="joint7_link" pos="0 0.0456 0" quat="0.7071054825112363 -0.7071080798594735 0.0 0.0">
+                      <joint name="joint7_to_joint6_joint" type="hinge" ref="0.0" class="mycobot_j6" range="-3.14 3.14159" axis="0 0 1" />
+                      <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.1" diaginertia="0.03 0.03 0.03" />
+                      <geom name="joint7_link_collision" pos="0 0 -0.012" quat="1.0 0.0 0.0 0.0" type="mesh" mesh="joint7_collision_link" class="collision" />
+                      <geom name="joint7_link_visual" pos="0 0 -0.012" quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="joint7_link" class="visualgeom" />
+                      <body name="gripper_camera_mount_link" pos="-0.001525 -0.02564 0.001766" quat="0.49999999999419004 0.4999999999941901 -0.5000031633932512 0.4999968365983544">
+                        <inertial pos="0.0029066 -9.8812E-10 -0.00074674" quat="1.0 0.0 0.0 0.0" mass="0.010449" diaginertia="7.0807e-06 5.5413e-06 1.611e-06" />
+                        <geom name="gripper_camera_mount_link_collision" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" type="mesh" mesh="gripper_camera_mount_collision_link" class="collision" />
+                        <geom name="gripper_camera_mount_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="gripper_camera_mount_link" class="visualgeom" />
+                        <body name="gripper_base_link" pos="0.03482 0.000048895 -0.022954" quat="9.381839456086127e-07 0.7071054825106139 0.7071080798588512 9.381873917569988e-07">
+                          <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.1" diaginertia="0.001 0.001 0.001" />  
+                          <!-- eric -->
+                          <geom name="gripper_base_link_collision" pos="0.0 0 -0.012 " quat="1.0 0.0 0.0 0.0" type="mesh" mesh="gripper_base_collision_link" class="collision" />
+                          <geom name="gripper_base_link_visual" pos="0.0 0 -0.012 " quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="gripper_base_link" class="visualgeom" />
+                          <body name="gripper_l3_link" pos="-0.012 0.005 0" quat="1.0 0.0 0.0 0.0">
+                            <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.01" diaginertia="0.000001 0.000001 0.000001" />
+                            <!-- eric -->
+                            <joint name="gripper_controller_joint" type="hinge" ref="0.0" class="gripper_controller" range="-0.74 0.15" axis="0 0 1" />
+                            <geom name="gripper_l3_link_collision" pos="0.012 0.0025 -0.012 " quat="1.0 0.0 0.0 0.0" type="mesh" mesh="gripper_l3_collision_link" class="collision" />
+                            <geom name="gripper_l3_link_visual" pos="0.012 0.0025 -0.012 " quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="gripper_l3_link" class="visualgeom" />
+                            <body name="gripper_l1_link" pos="-0.027 0.016 0" quat="1.0 0.0 0.0 0.0">
+                              <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.01" diaginertia="0.000001 0.000001 0.000001" />
+                              <!-- eric -->
+                              <joint name="gripper_l3_to_gripper_l1_joint" type="hinge" ref="0.0" class="gripper_mimic" range="-0.5 0.5" axis="0 0 1" />
+                              <geom name="gripper_l1_link_collision" pos="0.039 -0.0133 -0.012 " quat="1.0 0.0 0.0 0.0" type="mesh" mesh="gripper_l1_collision_link" class="rubber" />
+                              <geom name="gripper_l1_link_visual" pos="0.039 -0.0133 -0.012 " quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="gripper_l1_link" class="rubber" />
+                            </body>
+                          </body>
+                          <body name="gripper_l2_link" pos="-0.005 0.027 0" quat="1.0 0.0 0.0 0.0">
+                            <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.01" diaginertia="0.000001 0.000001 0.000001" />
+                            <!-- eric -->
+                            <joint name="gripper_base_to_gripper_l2_joint" type="hinge" ref="0.0" class="gripper_mimic" range="-0.8 0.5" axis="0 0 1" />
+                            <geom name="gripper_l2_link_collision" pos="0.005 -0.0195 -0.012 " quat="1.0 0.0 0.0 0.0" type="mesh" mesh="gripper_l2_collision_link" class="collision" />
+                            <geom name="gripper_l2_link_visual" pos="0.005 -0.0195 -0.012 " quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="gripper_l2_link" class="visualgeom" />
+                          </body>
+                          <body name="gripper_r3_link" pos="0.012 0.005 0" quat="1.0 0.0 0.0 0.0">
+                            <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.01" diaginertia="0.000001 0.000001 0.000001" />
+                            <!-- eric -->
+                            <joint name="gripper_base_to_gripper_r3_joint" type="hinge" ref="0.0" class="gripper_mimic" range="-0.15 0.7" axis="0 0 1" />
+                            <geom name="gripper_r3_link_collision" pos="-0.012 0.0025 -0.012" quat="1.0 0.0 0.0 0.0" type="mesh" mesh="gripper_r3_collision_link" class="collision" />
+                            <geom name="gripper_r3_link_visual" pos="-0.012 0.0025 -0.012 " quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="gripper_r3_link" class="visualgeom" />
+                            <body name="gripper_r1_link" pos="0.027 0.016 0" quat="1.0 0.0 0.0 0.0">
+                              <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.01" diaginertia="0.000001 0.000001 0.000001" />
+                              <!-- eric -->
+                              <joint name="gripper_r3_to_gripper_r1_joint" type="hinge" ref="0.0" class="gripper_mimic" range="-0.5 0.5" axis="0 0 1" />
+                              <geom name="gripper_r1_link_collision" pos="-0.039 -0.0133 -0.012 " quat="1.0 0.0 0.0 0.0" type="mesh" mesh="gripper_r1_collision_link" class="rubber" />
+                              <geom name="gripper_r1_link_visual" pos="-0.039 -0.0133 -0.012 " quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="gripper_r1_link" class="rubber" />
+                            </body>
+                          </body>
+                          <body name="gripper_r2_link" pos="0.005 0.027 0" quat="1.0 0.0 0.0 0.0">
+                            <inertial pos="0 0 0" quat="1.0 0.0 0.0 0.0" mass="0.01" diaginertia="0.000001 0.000001 0.000001" />
+                            <!-- eric -->
+                            <joint name="gripper_base_to_gripper_r2_joint" type="hinge" ref="0.0" class="gripper_mimic" range="-0.5 0.8" axis="0 0 1" />
+                            <geom name="gripper_r2_link_collision" pos="-0.005 -0.0195 -0.012 " quat="1.0 0.0 0.0 0.0" type="mesh" mesh="gripper_r2_collision_link" class="collision" />
+                            <geom name="gripper_r2_link_visual" pos="-0.005 -0.0195 -0.012 " quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="gripper_r2_link" class="visualgeom" />
+                          </body>
+                        </body>
+                        <body name="camera_link" pos="0.03 0.0025395 0.023202" quat="0.4999981633974483 0.49999999999662686 0.5000018366025516 0.49999999999662686">
+                          <inertial pos="-0.0013559 -6.2586E-05 -0.012547" quat="1.0 0.0 0.0 0.0" mass="0.043065" diaginertia="3.8933e-06 2.7008e-05 2.6878e-05" />
+                          <geom name="camera_link_collision" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" type="mesh" mesh="camera_collision_link" class="collision" />
+                          <geom name="camera_link_visual" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0"  type="mesh" mesh="camera_link" class="visualgeom" />
+                          <camera name="gripper_camera" pos="0.03 0.0025395 0.023202" quat="0.4999999999966269 -0.49999816339744835 -0.4999999999966269 0.5000018366025516" />
+                        </body>
+                      </body>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+      <site name="base_footprint_site" pos="0 0 0" quat="1 0 0 0" />
+      <site name="imu" size="0.01" pos="0 0 0" />
+    </body>
+  </worldbody>
+</mujoco>

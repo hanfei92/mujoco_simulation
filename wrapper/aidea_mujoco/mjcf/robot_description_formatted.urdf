@@ -1,0 +1,495 @@
+<?xml version="1.0" ?>
+<!-- <?xml version="1.0" encoding="utf-8"?> -->
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot name="robot_description_v2">
+	<link name="base_link">
+		<inertial>
+			<origin xyz="-0.004495 -0.00089865 0.30089" rpy="0 0 0"/>
+			<mass value="4.2685"/>
+			<inertia ixx="0.057276" ixy="1.1434E-05" ixz="-0.0018346" iyy="0.044181" iyz="6.2704E-06" izz="0.051433"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/base_link.stl"/>
+			</geometry>
+			<material name="">
+				<color rgba="0.79216 0.81961 0.93333 1"/>
+			</material>
+		</visual>
+	</link>
+	<link name="left_behind_wheel">
+		<inertial>
+			<origin xyz="1.1729E-06 0.025454 6.44E-08" rpy="0 0 0"/>
+			<mass value="0.26086"/>
+			<inertia ixx="0.00017201" ixy="5.9172E-09" ixz="2.3284E-11" iyy="0.00028866" iyz="-1.7892E-10" izz="0.00017201"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/left_behind_wheel.stl"/>
+			</geometry>
+			<material name="">
+				<color rgba="0.75294 0.75294 0.75294 1"/>
+			</material>
+		</visual>
+	</link>
+	<joint name="left_behind_wheel_joint" type="continuous">
+		<origin xyz="-0.093063 0.060998 0.02266" rpy="0 0 0"/>
+		<parent link="base_link"/>
+		<child link="left_behind_wheel"/>
+		<axis xyz="0 1 0"/>
+	</joint>
+	<link name="right_behind_wheel">
+		<inertial>
+			<origin xyz="-1.0042E-06 -0.025454 6.1399E-07" rpy="0 0 0"/>
+			<mass value="0.26086"/>
+			<inertia ixx="0.00017201" ixy="5.294E-09" ixz="-8.3469E-10" iyy="0.00028866" iyz="-2.6446E-09" izz="0.00017201"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/right_behind_wheel.stl"/>
+			</geometry>
+			<material name="">
+				<color rgba="0.75294 0.75294 0.75294 1"/>
+			</material>
+		</visual>
+	</link>
+	<joint name="right_behind_wheel_joint" type="continuous">
+		<origin xyz="-0.093063 -0.060998 0.02266" rpy="0 0 0"/>
+		<parent link="base_link"/>
+		<child link="right_behind_wheel"/>
+		<axis xyz="0 -1 0"/>
+	</joint>
+	<link name="left_front_wheel">
+		<inertial>
+			<origin xyz="-1.5817E-06 0.025454 1.1298E-06" rpy="0 0 0"/>
+			<mass value="0.26086"/>
+			<inertia ixx="0.00017201" ixy="-7.0322E-09" ixz="7.7925E-10" iyy="0.00028866" iyz="5.3773E-09" izz="0.00017201"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/left_front_wheel.stl"/>
+			</geometry>
+			<material name="">
+				<color rgba="0.75294 0.75294 0.75294 1"/>
+			</material>
+		</visual>
+	</link>
+	<joint name="left_front_wheel_joint" type="continuous">
+		<origin xyz="0.10693 0.060998 0.023501" rpy="0 0 0"/>
+		<parent link="base_link"/>
+		<child link="left_front_wheel"/>
+		<axis xyz="-8.1957E-05 1 0"/>
+	</joint>
+	<link name="right_front_wheel">
+		<inertial>
+			<origin xyz="2.908E-07 -0.025454 1.1986E-06" rpy="0 0 0"/>
+			<mass value="0.26086"/>
+			<inertia ixx="0.00017201" ixy="-1.2897E-09" ixz="2.6333E-10" iyy="0.00028866" iyz="-5.805E-09" izz="0.00017201"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/right_front_wheel.stl"/>
+			</geometry>
+			<material name="">
+				<color rgba="0.75294 0.75294 0.75294 1"/>
+			</material>
+		</visual>
+	</link>
+	<joint name="right_front_wheel_joint" type="continuous">
+		<origin xyz="0.10694 -0.060998 0.023501" rpy="0 0 0"/>
+		<parent link="base_link"/>
+		<child link="right_front_wheel"/>
+		<axis xyz="0 -1 0"/>
+	</joint>
+	<link name="airy">
+		<inertial>
+			<origin xyz="-0.00019019 6.2106E-07 0.027552" rpy="0 0 0"/>
+			<mass value="0.15063"/>
+			<inertia ixx="4.5255E-05" ixy="1.7898E-10" ixz="-1.6893E-08" iyy="4.5069E-05" iyz="1.7473E-09" izz="6.1719E-05"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/airy.stl"/>
+			</geometry>
+			<material name="">
+				<color rgba="0.75294 0.75294 0.75294 1"/>
+			</material>
+		</visual>
+	</link>
+	<joint name="airy_joint" type="fixed">
+		<origin xyz="0.03155 -0.0013198 0.25402" rpy="1.5708 -1.5355 1.5708"/>
+		<parent link="base_link"/>
+		<child link="airy"/>
+		<axis xyz="0 0 0"/>
+	</joint>
+	<link name="fisheye">
+		<inertial>
+			<origin xyz="1.5876E-14 -1.3181E-09 -0.020756" rpy="0 0 0"/>
+			<mass value="0.021596"/>
+			<inertia ixx="3.0792E-06" ixy="-1.9245E-22" ixz="-2.5225E-22" iyy="3.0792E-06" iyz="8.7683E-13" izz="3.8584E-06"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/fisheye.stl"/>
+			</geometry>
+			<material name="">
+				<color rgba="1 1 1 1"/>
+			</material>
+		</visual>
+	</link>
+	<joint name="fisheye_joint" type="fixed">
+		<origin xyz="-0.03495 -0.001876 0.77537" rpy="0 1.5708 0"/>
+		<parent link="base_link"/>
+		<child link="fisheye"/>
+		<axis xyz="0 0 0"/>
+	</joint>
+	<!-- MyCobot 280 M5 six-axis body; the source base mesh is omitted. -->
+	<link name="joint1">
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 -1.5708"/>
+			<geometry>
+				<mesh filename="full/joint1.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="joint2">
+		<visual>
+			<origin xyz="0 0 -0.06096" rpy="0 0 -1.5708"/>
+			<geometry>
+				<mesh filename="full/joint2.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="joint3">
+		<visual>
+			<origin xyz="0 0 0.03256" rpy="0 -1.5708 0"/>
+			<geometry>
+				<mesh filename="full/joint3.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="joint4">
+		<visual>
+			<origin xyz="0 0 0.03056" rpy="0 -1.5708 0"/>
+			<geometry>
+				<mesh filename="full/joint4.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="joint5">
+		<visual>
+			<origin xyz="0 0 -0.03356" rpy="-1.5708 0 0"/>
+			<geometry>
+				<mesh filename="full/joint5.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="joint6">
+		<visual>
+			<origin xyz="0 0 -0.038" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/joint6.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="joint6_flange">
+		<visual>
+			<origin xyz="0 0 -0.012" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/joint7.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<joint name="mycobot_mount_joint" type="fixed">
+		<origin xyz="-0.028185 -0.0016001 0.4765" rpy="0 0 1.5708"/>
+		<parent link="base_link"/>
+		<child link="joint1"/>
+	</joint>
+	<joint name="joint2_to_joint1" type="revolute">
+		<origin xyz="0 0 0.13156" rpy="0 0 0"/>
+		<parent link="joint1"/>
+		<child link="joint2"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-2.9321" upper="2.9321" velocity="0"/>
+	</joint>
+	<joint name="joint3_to_joint2" type="revolute">
+		<origin xyz="0 0 0" rpy="0 1.5708 -1.5708"/>
+		<parent link="joint2"/>
+		<child link="joint3"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-2.4434" upper="2.4434" velocity="0"/>
+	</joint>
+	<joint name="joint4_to_joint3" type="revolute">
+		<origin xyz="-0.1104 0 0" rpy="0 0 0"/>
+		<parent link="joint3"/>
+		<child link="joint4"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-2.6179" upper="2.6179" velocity="0"/>
+	</joint>
+	<joint name="joint5_to_joint4" type="revolute">
+		<origin xyz="-0.096 0 0.06462" rpy="0 0 -1.5708"/>
+		<parent link="joint4"/>
+		<child link="joint5"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-2.6179" upper="2.6179" velocity="0"/>
+	</joint>
+	<joint name="joint6_to_joint5" type="revolute">
+		<origin xyz="0 -0.07318 0" rpy="1.5708 -1.5708 0"/>
+		<parent link="joint5"/>
+		<child link="joint6"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-2.7052" upper="2.7925" velocity="0"/>
+	</joint>
+	<joint name="joint6output_to_joint6" type="revolute">
+		<origin xyz="0 0.0456 0" rpy="-1.5708 0 0"/>
+		<parent link="joint6"/>
+		<child link="joint6_flange"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-3.14" upper="3.14159" velocity="0"/>
+	</joint>
+	<link name="gripper_camera_mount">
+		<inertial>
+			<origin xyz="0.0029066 -9.8812E-10 -0.00074674" rpy="0 0 0"/>
+			<mass value="0.010449"/>
+			<inertia ixx="7.0807E-06" ixy="-2.1643E-15" ixz="-2.0009E-07" iyy="5.5413E-06" iyz="2.0207E-15" izz="1.611E-06"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/gripper_camera_mount.stl"/>
+			</geometry>
+			<material name="">
+				<color rgba="0.8 0.8 0.8 1"/>
+			</material>
+		</visual>
+	</link>
+	<joint name="gripper_camera_mount_joint" type="fixed">
+		<origin xyz="-0.001525 -0.02564 0.001766" rpy="3.14159 -1.57079 -1.5708"/>
+		<parent link="joint6_flange"/>
+		<child link="gripper_camera_mount"/>
+		<axis xyz="0 0 0"/>
+	</joint>
+	<link name="gripper_base">
+		<visual>
+			<origin xyz="0 0 -0.012" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/gripper_base.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="gripper_left1">
+		<visual>
+			<!-- DAE hole center is at z=+3.8 mm; place its axis on the link z=0 plane. -->
+			<origin xyz="0.040195 -0.012808 -0.0038" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/gripper_left1.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="gripper_left2">
+		<visual>
+			<!-- DAE hole center is at z=+3.8 mm; place its axis on the link z=0 plane. -->
+			<origin xyz="0.006 -0.01931 -0.0038" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/gripper_left2.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="gripper_left3">
+		<visual>
+			<!-- DAE hole center is at z=+11.3 mm; place its axis on the link z=0 plane. -->
+			<origin xyz="0.01325 0.00252 -0.0113" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/gripper_left3.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="gripper_right1">
+		<visual>
+			<!-- DAE hole center is at z=+3.8 mm; place its axis on the link z=0 plane. -->
+			<origin xyz="-0.03898 -0.013181 -0.0038" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/gripper_right1.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="gripper_right2">
+		<visual>
+			<!-- DAE hole center is at z=+3.8 mm; place its axis on the link z=0 plane. -->
+			<origin xyz="-0.005 -0.01931 -0.0038" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/gripper_right2.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<link name="gripper_right3">
+		<visual>
+			<!-- DAE hole center is at z=+11.3 mm; place its axis on the link z=0 plane. -->
+			<origin xyz="-0.01225 0.00252 -0.0113" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/gripper_right3.obj"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<mass value="0.1"/>
+			<inertia ixx="0.03" ixy="0" ixz="0" iyy="0.03" iyz="0" izz="0.03"/>
+		</inertial>
+	</link>
+	<joint name="gripper_mount_joint" type="fixed">
+		<!-- Uniform offset recovered from the original parallel STL assembly. -->
+		<origin xyz="0.03482 0.000048895 -0.022954" rpy="3.14159 0 1.5708"/>
+		<parent link="gripper_camera_mount"/>
+		<child link="gripper_base"/>
+	</joint>
+	<joint name="gripper_controller" type="revolute">
+		<origin xyz="-0.012 0.005 0" rpy="0 0 0"/>
+		<parent link="gripper_base"/>
+		<child link="gripper_left3"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-0.78" upper="0.15" velocity="0"/>
+	</joint>
+	<joint name="gripper_base_to_gripper_left2" type="revolute">
+		<!-- Shifted to the measured distal-finger vector for an exact parallelogram. -->
+		<origin xyz="-0.004766 0.026832 0" rpy="0 0 0"/>
+		<parent link="gripper_base"/>
+		<child link="gripper_left2"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-0.8" upper="0.5" velocity="0"/>
+		<mimic joint="gripper_controller" multiplier="1.0" offset="0"/>
+	</joint>
+	<joint name="gripper_left3_to_gripper_left1" type="revolute">
+		<!-- Match the left outer-link hole vector measured from gripper_left2.dae. -->
+		<origin xyz="-0.026961 0.015330 0" rpy="0 0 0"/>
+		<parent link="gripper_left3"/>
+		<child link="gripper_left1"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-0.5" upper="0.5" velocity="0"/>
+		<mimic joint="gripper_controller" multiplier="-1.0" offset="0"/>
+	</joint>
+	<joint name="gripper_base_to_gripper_right3" type="revolute">
+		<origin xyz="0.012 0.005 0" rpy="0 0 0"/>
+		<parent link="gripper_base"/>
+		<child link="gripper_right3"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-0.15" upper="0.7" velocity="0"/>
+		<mimic joint="gripper_controller" multiplier="-1.0" offset="0"/>
+	</joint>
+	<joint name="gripper_base_to_gripper_right2" type="revolute">
+		<!-- Shifted to the measured distal-finger vector for an exact parallelogram. -->
+		<origin xyz="0.004766 0.026831 0" rpy="0 0 0"/>
+		<parent link="gripper_base"/>
+		<child link="gripper_right2"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-0.5" upper="0.8" velocity="0"/>
+		<mimic joint="gripper_controller" multiplier="-1.0" offset="0"/>
+	</joint>
+	<joint name="gripper_right3_to_gripper_right1" type="revolute">
+		<!-- Match the right outer-link hole vector measured from gripper_right2.dae. -->
+		<origin xyz="0.026746 0.015702 0" rpy="0 0 0"/>
+		<parent link="gripper_right3"/>
+		<child link="gripper_right1"/>
+		<axis xyz="0 0 1"/>
+		<limit effort="1000" lower="-0.5" upper="0.5" velocity="0"/>
+		<mimic joint="gripper_controller" multiplier="1.0" offset="0"/>
+	</joint>
+	<link name="camera">
+		<inertial>
+			<origin xyz="-0.0013559 -6.2586E-05 -0.012547" rpy="0 0 0"/>
+			<mass value="0.043065"/>
+			<inertia ixx="3.8933E-06" ixy="-2.8637E-09" ixz="2.4469E-07" iyy="2.7008E-05" iyz="-1.0134E-09" izz="2.6878E-05"/>
+		</inertial>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="full/camera.stl"/>
+			</geometry>
+			<material name="">
+				<color rgba="1 1 1 1"/>
+			</material>
+		</visual>
+	</link>
+	<joint name="camera_joint" type="fixed">
+		<origin xyz="0.03 0.0025395 0.023202" rpy="1.5708 0 1.5708"/>
+		<parent link="gripper_camera_mount"/>
+		<child link="camera"/>
+		<axis xyz="0 0 0"/>
+	</joint>
+	<mujoco>
+		<compiler assetdir="assets" balanceinertia="true" discardvisual="false" strippath="false"/>
+	</mujoco>
+</robot>

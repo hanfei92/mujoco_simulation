@@ -1,0 +1,25 @@
+<mujoco model="aidea actuator_sensor">
+    <actuator>
+      <position name="left_behind_wheel_vel" joint="left_behind_wheel_joint" class="wheel"/>
+      <position name="left_front_wheel_vel" joint="left_front_wheel_joint" class="wheel"/>
+      <position name="right_behind_wheel_vel" joint="right_behind_wheel_joint" class="wheel"/>
+      <position name="right_front_wheel_vel" joint="right_front_wheel_joint" class="wheel"/>
+
+      <!-- <position name="lift" joint="lift_joint" class="lift_aidea" /> -->
+      <!-- <position name="arm" tendon="extend" class="telescope" /> -->
+      <position name="joint1" joint="joint2_to_joint1_joint" class="mycobot_j1"/>
+      <position name="joint2" joint="joint3_to_joint2_joint" class="mycobot_j2"/>
+      <position name="joint3" joint="joint4_to_joint3_joint" class="mycobot_j3"/>
+      <position name="joint4" joint="joint5_to_joint4_joint" class="mycobot_j4"/>
+      <position name="joint5" joint="joint6_to_joint5_joint" class="mycobot_j5"/>
+      <position name="joint6" joint="joint7_to_joint6_joint" class="mycobot_j6"/>
+      <position name="gripper" joint="gripper_controller_joint" class="gripper_controller"/>     
+    </actuator>
+
+  <sensor>
+    <gyro name="base_gyro" site="imu" />
+    <accelerometer name="base_accel" site="imu" />
+    <!-- <rangefinder name="base_lidar" site="lidar" cutoff="10.0"/> -->
+  </sensor>
+
+</mujoco>

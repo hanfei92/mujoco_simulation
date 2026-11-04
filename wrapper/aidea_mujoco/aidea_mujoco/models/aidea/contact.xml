@@ -1,0 +1,72 @@
+<mujoco model="aidea contact">
+  <contact>
+    <!-- 轮子和地面的摩擦 -->
+    <!-- 全向轮：friction="0.001 1.0"（横向无摩擦）； -->
+    <!-- 差速轮：friction="1.0 1.0"； -->
+    <!-- 麦克纳姆轮：friction="0.001 1.0" 或更复杂。 -->
+    <pair geom1="floor" geom2="left_behind_wheel_link"  condim="3" friction="1.0 1.0" solref="0.005 1" solimp="0.9 0.95 0.001"/>
+    <pair geom1="floor" geom2="right_behind_wheel_link" condim="3" friction="1.0 1.0" solref="0.005 1" solimp="0.9 0.95 0.001"/>
+    <pair geom1="floor" geom2="left_front_wheel_link"   condim="3" friction="1.0 1.0" solref="0.005 1" solimp="0.9 0.95 0.001"/>
+    <pair geom1="floor" geom2="right_front_wheel_link"  condim="3" friction="1.0 1.0" solref="0.005 1" solimp="0.9 0.95 0.001"/>
+
+    <!-- 底盘和地面无摩擦（防止卡住） -->
+    <pair geom1="floor" geom2="base_link_collision" condim="3" friction="0.0 0.0"/>
+
+    <exclude body1="base_link" body2="left_behind_wheel_link"/>
+    <exclude body1="base_link" body2="right_behind_wheel_link"/>
+    <exclude body1="base_link" body2="left_front_wheel_link"/>
+    <exclude body1="base_link" body2="right_front_wheel_link"/>
+
+    <exclude body1="base_link" body2="airy_link"/>
+    <exclude body1="base_link" body2="fisheye_link"/>
+
+    <exclude body1="base_link" body2="joint1_link"/>
+    <exclude body1="joint1_link" body2="joint2_link"/>
+    <exclude body1="joint2_link" body2="joint3_link"/>
+    <exclude body1="joint3_link" body2="joint4_link"/>
+    <exclude body1="joint4_link" body2="joint5_link"/>
+    <exclude body1="joint5_link" body2="joint6_link"/>
+    <exclude body1="joint6_link" body2="joint7_link"/>
+
+    <exclude body1="joint7_link" body2="gripper_camera_mount_link"/>
+    <exclude body1="gripper_camera_mount_link" body2="gripper_base_link"/>
+    <exclude body1="gripper_camera_mount_link" body2="camera_link"/>
+
+    <exclude body1="gripper_base_link" body2="gripper_l3_link"/>
+    <exclude body1="gripper_base_link" body2="gripper_l2_link"/>
+    <exclude body1="gripper_base_link" body2="gripper_r3_link"/>
+    <exclude body1="gripper_base_link" body2="gripper_r2_link"/>
+
+    <exclude body1="gripper_l3_link" body2="gripper_l1_link"/>
+    <exclude body1="gripper_r3_link" body2="gripper_r1_link"/>
+
+    <!-- 夹爪左右两侧不互相碰撞 -->
+    <exclude body1="gripper_l1_link" body2="gripper_r1_link"/>
+    <exclude body1="gripper_l2_link" body2="gripper_r2_link"/>
+    <exclude body1="gripper_l3_link" body2="gripper_r3_link"/>
+    <exclude body1="gripper_l1_link" body2="gripper_l2_link"/>
+    <exclude body1="gripper_l1_link" body2="gripper_l3_link"/>
+    <exclude body1="gripper_r1_link" body2="gripper_r2_link"/>
+    <exclude body1="gripper_r1_link" body2="gripper_r3_link"/>
+  </contact>
+
+  <tendon>
+
+  </tendon>
+
+  <equality>
+    <!-- polycoef="0 1 0 0 0" 表示 joint1 = 0 + 1*joint2。 -->
+    <!-- polycoef="0 -1 0 0 0" 表示 joint1 = 0 - 1*joint2。 -->
+    <!-- 注意：equality 是软约束，如果关节受力大，可能会偏离。如果需要硬约束，加 solref 和 solimp： -->
+    <!-- <joint joint1="..." joint2="..." polycoef="0 1 0 0 0" solref="0.005 1" solimp="0.9 0.95 0.001"/> -->
+    
+    <!-- 左手指联动 -->
+    <joint joint1="gripper_base_to_gripper_l2_joint" joint2="gripper_controller_joint" polycoef="0 1 0 0 0"/>
+    <joint joint1="gripper_l3_to_gripper_l1_joint" joint2="gripper_controller_joint" polycoef="0 -1 0 0 0"/>
+    
+    <!-- 右手指联动 -->
+    <joint joint1="gripper_base_to_gripper_r3_joint" joint2="gripper_controller_joint" polycoef="0 -1 0 0 0"/>
+    <joint joint1="gripper_base_to_gripper_r2_joint" joint2="gripper_controller_joint" polycoef="0 -1 0 0 0"/>
+    <joint joint1="gripper_r3_to_gripper_r1_joint" joint2="gripper_controller_joint" polycoef="0 1 0 0 0"/>
+  </equality>
+</mujoco>

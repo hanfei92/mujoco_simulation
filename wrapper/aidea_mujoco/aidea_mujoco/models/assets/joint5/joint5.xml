@@ -1,0 +1,21 @@
+<mujoco model="joint5">
+  <default>
+    <default class="visual">
+      <geom group="2" type="mesh" contype="0" conaffinity="0"/>
+    </default>
+    <default class="collision">
+      <geom group="3" type="mesh"/>
+    </default>
+  </default>
+  <asset>
+    <texture type="2d" name="material_joint5_0" file="material_joint5_0.png"/>
+    <material name="material_joint5_0" texture="material_joint5_0" specular="0.4000000000000001" shininess="0.001"/>
+    <mesh file="joint5.obj"/>
+  </asset>
+  <worldbody>
+    <body name="joint5">
+      <geom material="material_joint5_0" mesh="joint5" class="visual"/>
+      <geom mesh="joint5" class="collision"/>
+    </body>
+  </worldbody>
+</mujoco>

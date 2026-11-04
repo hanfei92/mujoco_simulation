@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aidea_mujoco"
+version = "0.1.0"
+description = "Aidea MuJoCo simulation"
+requires-python = ">=3.10"
+dependencies = [
+    "click",
+    "mujoco",
+    "mujoco-lidar[warp]",
+    "numpy",
+    "scipy",
+    "opencv-python",
+    "pynput",
+    "yourdfpy"
+
+]
+
+[tool.setuptools.packages.find]
+where = ["aidea_mujoco"]
+include = ["aidea_mujoco*"]

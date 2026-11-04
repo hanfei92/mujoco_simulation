@@ -1,0 +1,8 @@
+<mujoco model="aidea">
+  <include file="defaults.xml"/>
+  <include file="aidea_generated.xml"/>
+  <include file="contact.xml"/>
+  <include file="actuator_sensor.xml"/>
+  <include file="keyframes.xml"/>
+  <!-- <include file="omniwheels.xml"/> -->
+</mujoco>

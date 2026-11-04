@@ -1,0 +1,34 @@
+<mujoco model="omniwheels">
+      <body name="left_behind_wheel_link" pos="-0.093063 0.060998 0.02266" quat="0.707105 0.707108 0 0">
+        <!-- <inertial pos="1.17e-06 0.025454 6.44e-08" quat="1 0 0 0" mass="0.26086"
+                  diaginertia="0.00028866 0.00017201 0.00017201"/> -->
+        <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+        <joint name="left_behind_wheel_joint"/>
+        <geom type="mesh" mesh="left_behind_wheel_link" class="visualgeom" rgba="0.75294 0.75294 0.75294 1"/>
+        <geom name="left_behind_wheel_link" class="omniwheel_collision"/>
+      </body>
+      <body name="right_behind_wheel_link" pos="-0.093063 -0.060998 0.02266" quat="0.707105 0.707108 0 0">
+        <!-- <inertial pos="-1.00e-06 -0.025454 6.14e-07" quat="1 0 0 0" mass="0.26086"
+                  diaginertia="0.00017201 0.00028866 0.00017201"/> -->
+        <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+        <joint name="right_behind_wheel_joint"/>
+        <geom type="mesh" mesh="right_behind_wheel_link" class="visualgeom" rgba="0.75294 0.75294 0.75294 1"/>
+        <geom name="right_behind_wheel_link" class="omniwheel_collision"/>
+      </body>
+      <body name="left_front_wheel_link" pos="0.10693 0.060998 0.02266" quat="0.707105 0.707108 0 0">
+        <!-- <inertial pos="1.17e-06 0.025454 6.44e-08" quat="1 0 0 0" mass="0.26086"
+                  diaginertia="0.00028866 0.00017201 0.00017201"/> -->
+        <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+        <joint name="left_front_wheel_joint"/>
+        <geom type="mesh" mesh="left_front_wheel_link" class="visualgeom" rgba="0.75294 0.75294 0.75294 1"/>
+        <geom name="left_front_wheel_link" class="omniwheel_collision"/>
+      </body>
+      <body name="right_front_wheel_link" pos="0.10693 -0.060998 0.02266" quat="0.707105 0.707108 0 0">
+        <!-- <inertial pos="1.17e-06 0.025454 6.44e-08" quat="1 0 0 0" mass="0.26086"
+                  diaginertia="0.00028866 0.00017201 0.00017201"/> -->
+        <inertial pos="0 0 0" mass="0.3" diaginertia="2.03e-4 3.75e-4 2.03e-4"/>
+        <joint name="right_front_wheel_joint"/>
+        <geom type="mesh" mesh="right_front_wheel_link" class="visualgeom" rgba="0.75294 0.75294 0.75294 1"/>
+        <geom name="right_front_wheel_link" class="omniwheel_collision"/>
+      </body>
+</mujoco>

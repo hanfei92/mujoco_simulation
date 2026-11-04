@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 测试与工具缓存
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# 备份文件（你之前 mv 出来的 .bak）
+*.bak
+*.bk
+*.outer.bak
+*.empty.bak
+*.wrapper.bak
+
+# 日志与临时
+*.log
+tmp/
+
+aidea_mujoco/setup.py

@@ -1,0 +1,79 @@
+<mujoco model="defaults">
+  <option integrator="implicitfast" impratio="20" cone="elliptic" noslip_iterations="5">
+    <flag multiccd="enable" />
+  </option>
+  <size njmax="5000" nconmax="5000" />
+
+  <compiler angle="radian" />
+
+  <default>
+    <default class="aidea">
+      <geom mass="0" solref="0.005 1" />
+      <general biastype="affine" />
+
+      <default class="wheel">
+        <joint axis="0 0 1" armature="0.01" damping="0.1" frictionloss="0" limited="false" />
+        <velocity kv="1" gear="1" />
+        <!-- 轮子半径0.05,转成线速度1/0.05 = 20 gear = 20 -->
+        <position kp="500" forcerange="-25.0 25.0"/>
+      </default>
+
+      <default class="arm">
+        <!-- <joint axis="0 0 1" damping="1" /> -->
+        <joint damping="1" />
+        <position kp="20" />
+        <default class="mycobot_j1">
+          <joint armature="0.01" damping="2" frictionloss=".1" />
+          <position kp="500" kv="20" ctrlrange="-2.9321 2.9321" ctrllimited="true"/>
+        </default>
+        <default class="mycobot_j2">
+          <joint armature="0.01" damping="2" frictionloss=".1" />
+                <position kp="500" kv="20" ctrlrange="-2.4434 2.4434" ctrllimited="true"/>
+        </default>
+        <default class="mycobot_j3">
+          <joint armature="0.01" damping="2" frictionloss=".1" />
+          <position kp="500" kv="20" ctrlrange="-2.6179 2.6179" ctrllimited="true"/>
+        </default>
+        <default class="mycobot_j4">
+          <joint armature="0.01" damping="2" frictionloss=".1" />
+          <position kp="500" kv="20" ctrlrange="-2.6179 2.6179" ctrllimited="true"/>
+        </default>
+        <default class="mycobot_j5">
+          <joint armature="0.01" damping="2" frictionloss=".1" />
+          <position kp="500" kv="20" ctrlrange="-2.7052 2.7925" ctrllimited="true"/>
+        </default>
+        <default class="mycobot_j6">
+          <joint armature="0.01" damping="2" frictionloss=".1" />
+          <position kp="500" kv="20" ctrlrange="-3.14 3.14159" ctrllimited="true"/>
+        </default>
+
+        <default class="gripper_controller">
+          <joint damping="1" armature="0.01" frictionloss="0.1"/>
+          <position kp="200" kv="10" ctrlrange="-0.74 0.15" ctrllimited="true"/>
+        </default>
+
+        <!-- 夹爪手指联动关节（mimic，不需要执行器，但需要物理参数） -->
+        <default class="gripper_mimic">
+          <joint damping="1" armature="0.01" frictionloss="0.1"/>
+        </default>
+      </default>
+
+      <default class="visualgeom">
+        <geom group="2" type="mesh" contype="0" conaffinity="0" />
+      </default>
+
+      <default class="collision">
+        <geom group="3" type="mesh" />
+        <default class="rubber">
+          <geom  condim="6" friction="2 0.5 0.5" priority="1" solref="0.02 1" solimp="0.99 0.99 0.01" conaffinity="1" contype="1" />
+        </default>
+
+        <default class="omniwheel_collision">
+            <geom type="capsule" size="0.05 0.02" pos="0 0 0" euler="0 0 0"
+                  friction="0.8 0.05 0.001" contype="6" conaffinity="4"/>
+        </default>
+      </default>
+    </default>
+  </default>
+
+</mujoco>

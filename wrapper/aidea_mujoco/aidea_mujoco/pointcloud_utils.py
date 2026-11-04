@@ -1,0 +1,105 @@
+import numpy as np
+
+from aidea_mujoco.datamodels.status_aidea_camera import StatusAideaCameras
+from aidea_mujoco.enums.aidea_cameras import AideaCameras
+
+# TODO: Move this cam_hemilidar settings pull somewhere less ambiguous
+camera_settings = AideaCameras.cam_hemilidar_airy.initial_camera_settings
+
+fx, fy, cx, cy = (
+    camera_settings.focal[0],
+    camera_settings.focal[1],
+    camera_settings.width / 2,
+    camera_settings.height / 2,
+)
+
+def estimate_pointcloud_density():
+    stride = 1
+    estimated_points = (camera_settings.width // stride) * (camera_settings.height // stride)
+
+    res_x = (1 / fx) * 100.0
+    res_y = (1 / fy) * 100.0
+    print(
+        f"Point cloud stride={stride}. "
+        f"Approx distance between adjacent points at 1.0m depth: "
+        f"{res_x:.2f} cm x {res_y:.2f} cm. "
+        f"Estimated points generated per frame: {estimated_points:,}, or {estimated_points*10}/s at 10hz per point cloud"
+    )
+
+
+def depth_to_points(depth_image, fx, fy, cx, cy):
+    height, width = depth_image.shape
+
+    xx, yy = np.meshgrid(np.arange(width), np.arange(height))
+    valid = (depth_image > 0) & np.isfinite(depth_image)
+
+    z = depth_image[valid]
+    x = (xx[valid] - cy) * z / fx
+    y = (yy[valid] - cx) * z / fy
+
+    return (x,y,z)
+    
+
+    
+def _depth_to_point_cloud(depth_image, fx, fy, cx, cy):
+    x,y,z=depth_to_points(depth_image, fx, fy, cx, cy)
+    return np.stack((x, y, z), axis=-1)
+
+
+def _get_pointcloud(depth_buffer):
+    points = _depth_to_point_cloud(depth_buffer, fx, fy, cx, cy)
+    return points
+
+
+def get_pointcloud_from_camera_status(
+    camera_status: StatusAideaCameras,
+    in_world_frame: bool,
+    T_base_left: np.ndarray,
+    T_base_right: np.ndarray,
+) -> list[tuple[str, np.ndarray]]:
+    """Calculates a pointcloud from the simulated lidar depth cameras, returned in the world frame if requested.
+
+    Get `camera_status` from `sim.pull_camera_data()`"""
+
+    if not in_world_frame:
+        return [
+            (
+                lidar.name,
+                _get_pointcloud(
+                    camera_status.get_camera_data(lidar, use_depth_color_map=False)
+                ),
+            )
+            for lidar in AideaCameras.hemispherical_lidars()
+        ]
+
+    all_points = []
+
+    # We transform the point cloud to be in base_link frame
+    T_world_left = T_base_left
+    T_world_right = T_base_right
+
+    left_translation = T_world_left[:3, 3]
+    left_rot_inv = T_world_left[:3, :3].T
+
+    right_translation = T_world_right[:3, 3]
+    right_rot_inv = T_world_right[:3, :3].T
+
+    for lidar in AideaCameras.hemispherical_lidars():
+        try:
+            points = _get_pointcloud(
+                camera_status.get_camera_data(lidar, use_depth_color_map=False)
+            )
+            if "left" in lidar.name:
+                points = (points) @ left_rot_inv + left_translation
+            elif "right" in lidar.name:
+                points = (points) @ right_rot_inv + right_translation
+            else:
+                raise Exception(f"Unknown lidar, can't do pointcloud transform: {lidar.name}")
+
+            all_points.append((lidar.name, points))
+        except ValueError:
+            ...
+        except Exception as e:
+            print(f"Failed to get pointcloud for {lidar.name}, {e=}")
+
+    return all_points

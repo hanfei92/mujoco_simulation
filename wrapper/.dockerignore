@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+*.log
+tmp/
+README.md
+docs/
+tests/
+.pytest_cache/
+.ruff_cache/

@@ -1,0 +1,9 @@
+<mujoco model="test">
+  <compiler meshdir="../assets/" angle="radian"/>
+  <include file="open_world_scene.xml"/>
+  <include file="defaults.xml"/>
+  <include file="aidea_generated.xml"/>
+  <include file="contact.xml"/>
+  <include file="actuator_sensor.xml"/>
+  <include file="keyframes.xml"/>
+</mujoco>

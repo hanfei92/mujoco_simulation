@@ -1,0 +1,25 @@
+<mujoco model="aidea scene">
+  <!-- 1. 先加载小车 -->
+  <include file="mujoco_description_formatted.xml"/>
+  
+  <!-- 2. 再加载办公室 -->
+  <include file="office.xml"/>
+  <!-- <include file="room-732.xml"/> -->
+  <!-- <include file="hongkong.xml"/> -->
+  
+  <!-- 3. 全局选项 -->
+  <option integrator="implicitfast" gravity="0 0 -9.81" viscosity="0.1"/>
+  
+  <!-- 4. 全局视觉 -->
+  <visual>
+    <headlight diffuse="0.5 0.5 0.5" ambient="0.3 0.3 0.3" specular="0.1 0.1 0.1"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+  
+  <!-- 5. 全局 asset（如果办公室和小车都需要） -->
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.4 0.5 0.6" rgb2="0.1 0.1 0.15"
+             width="512" height="3072"/>
+  </asset>
+</mujoco>

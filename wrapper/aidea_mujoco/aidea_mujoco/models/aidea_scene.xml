@@ -1,0 +1,8 @@
+<mujoco model="aidea scene">
+  <compiler meshdir="assets/"/>
+  <include file="open_world_scene.xml"/>
+  <include file="aidea/aidea_static.xml"/>
+
+  <!-- <include file="room_scene/room_scene.xml"/> -->
+  <!-- <include file="table.xml"/> -->
+</mujoco>

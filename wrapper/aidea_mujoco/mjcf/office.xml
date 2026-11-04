@@ -1,0 +1,287 @@
+<mujoco model="office_scene">
+  <compiler angle="radian" meshdir="assets/" texturedir="assets"/>
+
+  <option integrator="implicitfast" gravity="0 0 -9.81"/>
+
+  <visual>
+    <headlight diffuse="0.5 0.5 0.5" ambient="0.3 0.3 0.3" specular="0.1 0.1 0.1"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <!-- 天空盒 -->
+    <texture type="skybox" builtin="gradient" rgb1="0.4 0.5 0.6" rgb2="0.1 0.1 0.15"
+             width="512" height="3072"/>
+
+    <!-- 地板 -->
+    <texture type="2d" name="floor_tex" builtin="checker"
+             rgb1="0.25 0.25 0.28" rgb2="0.35 0.35 0.38"
+             mark="edge" markrgb="0.5 0.5 0.5"
+             width="300" height="300"/>
+    <material name="floor_mat" texture="floor_tex" texuniform="true" texrepeat="8 8" reflectance="0.1"/>
+
+    <!-- 地毯 -->
+    <texture type="2d" name="carpet_tex" builtin="checker"
+             rgb1="0.3 0.15 0.15" rgb2="0.25 0.12 0.12"
+             mark="none" width="100" height="100"/>
+    <material name="carpet_mat" texture="carpet_tex" texuniform="true" texrepeat="4 4" reflectance="0.05"/>
+
+    <!-- 墙壁 -->
+    <material name="wall_mat" rgba="0.85 0.85 0.82 1" reflectance="0.1"/>
+
+    <!-- 天花板 -->
+    <material name="ceiling_mat" rgba="0.92 0.92 0.92 1"/>
+
+    <!-- 木质材料 -->
+    <material name="wood_mat" rgba="0.45 0.3 0.18 1" reflectance="0.2"/>
+
+    <!-- 金属材料 -->
+    <material name="metal_mat" rgba="0.6 0.6 0.65 1" reflectance="0.5"/>
+
+    <!-- 屏幕材料 -->
+    <material name="screen_mat" rgba="0.1 0.1 0.15 1" reflectance="0.3" emission="0.3"/>
+
+    <!-- 塑料材料 -->
+    <material name="plastic_black" rgba="0.15 0.15 0.15 1"/>
+    <material name="plastic_white" rgba="0.9 0.9 0.9 1"/>
+    <material name="plastic_blue" rgba="0.2 0.4 0.7 1"/>
+    <material name="plastic_red" rgba="0.7 0.2 0.2 1"/>
+  </asset>
+
+  <worldbody>
+    <!-- ========== 光照 ========== -->
+    <light pos="0 0 2.8" dir="0 0 -1" directional="true"
+           diffuse="0.8 0.8 0.8" specular="0.2 0.2 0.2"
+           castshadow="true"/>
+    <light pos="2 2 2.5" dir="-0.5 -0.5 -1" directional="true"
+           diffuse="0.5 0.5 0.5" specular="0.1 0.1 0.1"/>
+    <light pos="-2 -2 2.5" dir="0.5 0.5 -1" directional="true"
+           diffuse="0.4 0.4 0.4" specular="0.1 0.1 0.1"/>
+    <light pos="0 0 2.5" dir="0 0 -1" diffuse="0.3 0.3 0.35" specular="0 0 0"/>
+
+    <!-- ========== 房间尺寸 ========== -->
+    <!-- 房间: 8m x 6m x 2.8m -->
+    <!-- 地板 -->
+    <geom name="floor" type="plane" size="4 3 0.1" material="floor_mat"
+          pos="0 0 0" contype="1" conaffinity="1"/>
+
+    <!-- 地毯 -->
+    <geom name="carpet" type="box" size="1.5 1.0 0.005" pos="0 0 0.005"
+          material="carpet_mat" contype="0" conaffinity="0"/>
+
+    <!-- 墙壁 -->
+    <!-- 后墙 (y = -3) -->
+    <geom name="wall_back" type="box" size="4 0.1 1.4" pos="0 -3 1.4"
+          material="wall_mat" contype="1" conaffinity="1"/>
+    <!-- 前墙 (y = +3) -->
+    <geom name="wall_front" type="box" size="4 0.1 1.4" pos="0 3 1.4"
+          material="wall_mat" contype="1" conaffinity="1"/>
+    <!-- 左墙 (x = -4) -->
+    <geom name="wall_left" type="box" size="0.1 3 1.4" pos="-4 0 1.4"
+          material="wall_mat" contype="1" conaffinity="1"/>
+    <!-- 右墙 (x = +4) -->
+    <geom name="wall_right" type="box" size="0.1 3 1.4" pos="4 0 1.4"
+          material="wall_mat" contype="1" conaffinity="1"/>
+
+    <!-- 天花板 -->
+    <geom name="ceiling" type="box" size="4 3 0.05" pos="0 0 2.8"
+          material="ceiling_mat" contype="1" conaffinity="1"/>
+
+    <!-- ========== 办公桌 1 (左) ========== -->
+    <body name="desk1" pos="-1.5 -1.5 0">
+      <!-- 桌面 -->
+      <geom name="desk1_top" type="box" size="0.7 0.4 0.03" pos="0 0 0.75"
+            material="wood_mat" contype="1" conaffinity="1"/>
+      <!-- 桌腿 -->
+      <geom name="desk1_leg1" type="box" size="0.03 0.03 0.375" pos="-0.65 -0.35 0.375"
+            material="metal_mat"/>
+      <geom name="desk1_leg2" type="box" size="0.03 0.03 0.375" pos="0.65 -0.35 0.375"
+            material="metal_mat"/>
+      <geom name="desk1_leg3" type="box" size="0.03 0.03 0.375" pos="-0.65 0.35 0.375"
+            material="metal_mat"/>
+      <geom name="desk1_leg4" type="box" size="0.03 0.03 0.375" pos="0.65 0.35 0.375"
+            material="metal_mat"/>
+
+      <!-- 显示器 -->
+      <body name="monitor1" pos="0 -0.25 0.78">
+        <geom name="monitor1_stand" type="box" size="0.08 0.08 0.02" pos="0 0 0.02"
+              material="plastic_black"/>
+        <geom name="monitor1_pole" type="box" size="0.02 0.02 0.15" pos="0 0 0.15"
+              material="plastic_black"/>
+        <geom name="monitor1_screen" type="box" size="0.3 0.02 0.2" pos="0 0 0.4"
+              material="screen_mat"/>
+        <geom name="monitor1_frame" type="box" size="0.32 0.03 0.22" pos="0 0 0.4"
+              material="plastic_black" contype="0" conaffinity="0"/>
+      </body>
+
+      <!-- 键盘 -->
+      <geom name="keyboard1" type="box" size="0.18 0.06 0.01" pos="0 0.05 0.78"
+            material="plastic_black"/>
+
+      <!-- 鼠标 -->
+      <geom name="mouse1" type="box" size="0.03 0.02 0.01" pos="0.25 0.05 0.78"
+            material="plastic_black"/>
+
+      <!-- 台灯 -->
+      <body name="lamp1" pos="-0.5 -0.3 0.78">
+        <geom name="lamp1_base" type="cylinder" size="0.06 0.01" pos="0 0 0.01"
+              material="metal_mat"/>
+        <geom name="lamp1_pole" type="cylinder" size="0.01 0.2" pos="0 0 0.2"
+              material="metal_mat"/>
+        <geom name="lamp1_head" type="box" size="0.06 0.06 0.03" pos="0 0.05 0.42"
+              material="plastic_white"/>
+        <light pos="-0.5 -0.3 1.2" dir="0 0 -1" diffuse="0.6 0.5 0.4"
+               specular="0.2 0.2 0.2" castshadow="true"/>
+      </body>
+
+      <!-- 咖啡杯 -->
+      <geom name="cup1" type="cylinder" size="0.04 0.05" pos="0.4 -0.2 0.83"
+            material="plastic_white"/>
+    </body>
+
+    <!-- ========== 办公桌 2 (右) ========== -->
+    <body name="desk2" pos="1.5 -1.5 0">
+      <geom name="desk2_top" type="box" size="0.7 0.4 0.03" pos="0 0 0.75"
+            material="wood_mat" contype="1" conaffinity="1"/>
+      <geom name="desk2_leg1" type="box" size="0.03 0.03 0.375" pos="-0.65 -0.35 0.375"
+            material="metal_mat"/>
+      <geom name="desk2_leg2" type="box" size="0.03 0.03 0.375" pos="0.65 -0.35 0.375"
+            material="metal_mat"/>
+      <geom name="desk2_leg3" type="box" size="0.03 0.03 0.375" pos="-0.65 0.35 0.375"
+            material="metal_mat"/>
+      <geom name="desk2_leg4" type="box" size="0.03 0.03 0.375" pos="0.65 0.35 0.375"
+            material="metal_mat"/>
+
+      <body name="monitor2" pos="0 -0.25 0.78">
+        <geom name="monitor2_stand" type="box" size="0.08 0.08 0.02" pos="0 0 0.02"
+              material="plastic_black"/>
+        <geom name="monitor2_pole" type="box" size="0.02 0.02 0.15" pos="0 0 0.15"
+              material="plastic_black"/>
+        <geom name="monitor2_screen" type="box" size="0.3 0.02 0.2" pos="0 0 0.4"
+              material="screen_mat"/>
+        <geom name="monitor2_frame" type="box" size="0.32 0.03 0.22" pos="0 0 0.4"
+              material="plastic_black" contype="0" conaffinity="0"/>
+      </body>
+
+      <geom name="keyboard2" type="box" size="0.18 0.06 0.01" pos="0 0.05 0.78"
+            material="plastic_black"/>
+      <geom name="mouse2" type="box" size="0.03 0.02 0.01" pos="0.25 0.05 0.78"
+            material="plastic_black"/>
+    </body>
+
+    <!-- ========== 办公椅 1 ========== -->
+    <body name="chair1" pos="-1.5 -0.5 0">
+      <geom name="chair1_seat" type="box" size="0.25 0.25 0.03" pos="0 0 0.45"
+            material="plastic_black"/>
+      <geom name="chair1_back" type="box" size="0.25 0.03 0.25" pos="0 -0.22 0.7"
+            material="plastic_black"/>
+      <geom name="chair1_pole" type="cylinder" size="0.03 0.2" pos="0 0 0.25"
+            material="metal_mat"/>
+      <geom name="chair1_base" type="cylinder" size="0.25 0.02" pos="0 0 0.05"
+            material="plastic_black"/>
+    </body>
+
+    <!-- ========== 办公椅 2 ========== -->
+    <body name="chair2" pos="1.5 -0.5 0">
+      <geom name="chair2_seat" type="box" size="0.25 0.25 0.03" pos="0 0 0.45"
+            material="plastic_black"/>
+      <geom name="chair2_back" type="box" size="0.25 0.03 0.25" pos="0 -0.22 0.7"
+            material="plastic_black"/>
+      <geom name="chair2_pole" type="cylinder" size="0.03 0.2" pos="0 0 0.25"
+            material="metal_mat"/>
+      <geom name="chair2_base" type="cylinder" size="0.25 0.02" pos="0 0 0.05"
+            material="plastic_black"/>
+    </body>
+
+    <!-- ========== 书架 (后墙) ========== -->
+    <body name="bookshelf" pos="0 -2.8 0">
+      <!-- 书架框架 -->
+      <geom name="shelf_frame" type="box" size="1.0 0.2 0.9" pos="0 0 0.9"
+            material="wood_mat"/>
+      <!-- 隔板 -->
+      <geom name="shelf_1" type="box" size="0.95 0.18 0.02" pos="0 0 0.3"
+            material="wood_mat"/>
+      <geom name="shelf_2" type="box" size="0.95 0.18 0.02" pos="0 0 0.6"
+            material="wood_mat"/>
+      <geom name="shelf_3" type="box" size="0.95 0.18 0.02" pos="0 0 0.9"
+            material="wood_mat"/>
+      <geom name="shelf_4" type="box" size="0.95 0.18 0.02" pos="0 0 1.2"
+            material="wood_mat"/>
+      <geom name="shelf_5" type="box" size="0.95 0.18 0.02" pos="0 0 1.5"
+            material="wood_mat"/>
+
+      <!-- 书 (简化成彩色小盒子) -->
+      <geom name="book1" type="box" size="0.03 0.12 0.1" pos="-0.6 0 0.42"
+            material="plastic_red"/>
+      <geom name="book2" type="box" size="0.03 0.12 0.1" pos="-0.5 0 0.42"
+            material="plastic_blue"/>
+      <geom name="book3" type="box" size="0.03 0.12 0.1" pos="-0.4 0 0.42"
+            material="plastic_red"/>
+      <geom name="book4" type="box" size="0.03 0.12 0.1" pos="0.2 0 0.72"
+            material="plastic_blue"/>
+      <geom name="book5" type="box" size="0.03 0.12 0.1" pos="0.3 0 0.72"
+            material="plastic_red"/>
+    </body>
+
+    <!-- ========== 文件柜 (右墙) ========== -->
+    <body name="cabinet" pos="3.5 -1.0 0">
+      <geom name="cabinet_body" type="box" size="0.3 0.4 0.6" pos="0 0 0.6"
+            material="metal_mat"/>
+      <geom name="cabinet_door1" type="box" size="0.28 0.38 0.02" pos="0 0 0.6"
+            material="plastic_black" contype="0" conaffinity="0"/>
+      <geom name="cabinet_handle1" type="box" size="0.02 0.02 0.08" pos="-0.25 0 0.6"
+            material="metal_mat"/>
+      <geom name="cabinet_handle2" type="box" size="0.02 0.02 0.08" pos="0.25 0 0.6"
+            material="metal_mat"/>
+    </body>
+
+    <!-- ========== 白板 (左墙) ========== -->
+    <body name="whiteboard" pos="-3.8 0 1.5">
+      <geom name="whiteboard_frame" type="box" size="0.02 1.0 0.6" pos="0 0 0"
+            material="metal_mat"/>
+      <geom name="whiteboard_surface" type="box" size="0.01 0.95 0.55" pos="0.01 0 0"
+            material="plastic_white"/>
+    </body>
+
+    <!-- ========== 饮水机 (右后角) ========== -->
+    <body name="water_cooler" pos="3.5 -2.5 0">
+      <geom name="cooler_body" type="box" size="0.15 0.15 0.5" pos="0 0 0.5"
+            material="plastic_white"/>
+      <geom name="cooler_top" type="cylinder" size="0.12 0.15" pos="0 0 1.15"
+            material="plastic_blue"/>
+      <geom name="cooler_bottle" type="cylinder" size="0.1 0.2" pos="0 0 1.5"
+            material="plastic_blue"/>
+    </body>
+
+    <!-- ========== 盆栽 (左前角) ========== -->
+    <body name="plant1" pos="-3.5 2.5 0">
+      <geom name="pot1" type="cylinder" size="0.15 0.15" pos="0 0 0.15"
+            material="plastic_red"/>
+      <geom name="plant1_leaves" type="box" size="0.25 0.25 0.3" pos="0 0 0.55"
+            material="plastic_black"/>
+    </body>
+
+    <!-- ========== 盆栽 2 (右前角) ========== -->
+    <body name="plant2" pos="3.5 2.5 0">
+      <geom name="pot2" type="cylinder" size="0.15 0.15" pos="0 0 0.15"
+            material="plastic_red"/>
+      <geom name="plant2_leaves" type="box" size="0.25 0.25 0.3" pos="0 0 0.55"
+            material="plastic_black"/>
+    </body>
+
+    <!-- ========== 垃圾桶 ========== -->
+    <body name="trash_can" pos="-2.5 -1.0 0">
+      <geom name="trash_body" type="cylinder" size="0.15 0.25" pos="0 0 0.25"
+            material="plastic_black"/>
+    </body>
+
+    <!-- ========== 挂钟 (后墙) ========== -->
+    <body name="clock" pos="0 -2.9 2.0">
+      <geom name="clock_frame" type="cylinder" size="0.15 0.02" pos="0 0 0"
+            quat="0.707107 0.707107 0 0" material="plastic_black"/>
+      <geom name="clock_face" type="cylinder" size="0.13 0.01" pos="0 0.02 0"
+            quat="0.707107 0.707107 0 0" material="plastic_white"/>
+    </body>
+  </worldbody>
+</mujoco>

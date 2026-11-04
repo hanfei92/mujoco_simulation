@@ -1,0 +1,4 @@
+<mujoco model="stretch scene">
+  <!-- <include file="open_world_scene.xml"/> -->
+  <include file="aidea_static.xml"/>
+</mujoco>
