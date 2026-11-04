@@ -41,4 +41,4 @@ RUN touch aidea_mujoco/aidea_mujoco/msg/__init__.py
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv add pyzmq protobuf "mcp[cli]" uvicorn
 
-CMD ["uv", "run", "python", "run_sim.py"]
+CMD ["uv", "run", "python", "mcp_server.py"]

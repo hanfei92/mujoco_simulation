@@ -19,6 +19,8 @@ dependencies = [
     "grpcio-tools>=1.85.1",
     "pyzmq>=27.3.0",
     "protobuf>=7.36.2",
+    "mcp[cli]>=2.3.0",
+    "uvicorn>=0.54.0",
 ]
 
 [tool.setuptools.packages.find]
