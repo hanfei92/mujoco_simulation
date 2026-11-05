@@ -39,6 +39,9 @@ from aidea_mujoco.trapezoidal_profile import TrapezoidalProfile
 
 from mujoco_lidar import MjLidarWrapper, scan_gen
 
+from aidea_mujoco.plugins.registry import PLUGIN_REGISTRY
+import yaml
+
 @dataclass
 class MujocoServerProxies:
     _command: "DictProxy[str, StatusCommand]"
@@ -47,6 +50,7 @@ class MujocoServerProxies:
     _sensors: "DictProxy[str, StatusAideaSensors]"
     _joint_limits: "DictProxy[str, dict[Actuators, tuple[float, float]]]"
     _lidar_points: "DictProxy[str, np.ndarray]"   # ← 新增
+    _robot_command: "DictProxy[str, dict]"
 
     def __setattr__(self, name: str, value) -> None:
         try:
@@ -93,6 +97,12 @@ class MujocoServerProxies:
     def set_lidar_points(self, value: np.ndarray): #eric# ← 新增
         self._lidar_points["val"] = value 
 
+    def get_robot_command(self) -> dict:
+        return self._robot_command["val"]
+
+    def set_robot_command(self, value: dict):
+        self._robot_command["val"] = value
+
     @staticmethod
     def default(manager: SyncManager) -> "MujocoServerProxies":
         return MujocoServerProxies(
@@ -102,6 +112,7 @@ class MujocoServerProxies:
             _sensors=manager.dict({"val": StatusAideaSensors.default()}),
             _joint_limits=manager.dict({"val": {}}),
             _lidar_points=manager.dict({"val": np.zeros((0, 3), dtype=np.float32)}), #eric
+            _robot_command=manager.dict({"val": {}}),
         )
 
 
@@ -390,11 +401,35 @@ class MujocoServer:
             scene_xml_path = MujocoSimulator.get_scene_xml_path()
             print(scene_xml_path)
 
-        if model is None:
-            print(f"debug: {scene_xml_path}")
+        # if model is None:
+        #     print(f"debug: {scene_xml_path}")
 
-            model = MjModel.from_xml_path(scene_xml_path)
+        #     model = MjModel.from_xml_path(scene_xml_path)
             # model = MjModel.from_xml_path(str("/home/amigo/Documents/ament_ws/src/aidea_mujoco/mjcf/scene.xml"))
+
+        if model is None:
+            # 方案 B: MjSpec 加载 scene + 各机器人 MJCF
+            scene_spec = mujoco.MjSpec.from_file(scene_xml_path)
+            for robot_xml in os.environ.get("ROBOT_MJCF_INCLUDES", "").split(","):
+                robot_xml = robot_xml.strip()
+                if not robot_xml:
+                    continue
+                robot_spec = mujoco.MjSpec.from_file(robot_xml)
+                robot_id = os.path.basename(robot_xml).split("_")[0]  # "g1"
+                # for obj in [mujoco.mjtObj.mjOBJ_BODY, mujoco.mjtObj.mjOBJ_JOINT,
+                #             mujoco.mjtObj.mjOBJ_ACTUATOR, mujoco.mjtObj.mjOBJ_SITE,
+                #             mujoco.mjtObj.mjOBJ_SENSOR]:
+                #     robot_spec.add_prefix(f"{robot_id}_", obj)
+                # scene_spec.worldbody.attach(robot_spec)
+
+                # 挂到某个 site 上
+                # mount_site = scene_spec.worldbody.add_site(name="g1_mount", pos=[2, 0, 0])
+                # scene_spec.attach(robot_spec, site=mount_site, prefix="g1_")
+
+                # 直接 attach，用 prefix 参数加前缀
+                frame = scene_spec.worldbody.add_frame(pos=[0, 0, 0.793])
+                scene_spec.attach(robot_spec, frame=frame, prefix=f"{robot_id}_")
+            model = scene_spec.compile()
 
         change_start_pose(model, name="base_link", translation=start_translation, rotation_quat=start_rotation_quat)
 
@@ -414,11 +449,30 @@ class MujocoServer:
 
         self.data_proxies = data_proxies
 
+
         # ---- Stage 2: 唯一的 ZMQ 发布器，传给各 Controller ----
         self.zmq_publisher = ZmqPublisher(
             endpoint=os.environ.get("ZMQ_PUB_ENDPOINT", "tcp://*:5555")
         )
         print(f"[mujoco_server] ZMQ PUB bound to {self.zmq_publisher._endpoint}")    
+
+
+        # ---- 加载机器人插件 ----
+        self.plugins = []
+        plugin_cfg_paths = os.environ.get("ROBOT_PLUGIN_CONFIGS", "").split(",")
+        plugin_cfg_paths = [p.strip() for p in plugin_cfg_paths if p.strip()]
+        for cfg_path in plugin_cfg_paths:
+            try:
+                with open(cfg_path) as f:
+                    cfg = yaml.safe_load(f)
+                cls = PLUGIN_REGISTRY[cfg["type"]]
+                plugin = cls(self, cfg)
+                plugin.on_load(self.mjmodel, self.mjdata)
+                self.plugins.append(plugin)
+                print(f"[plugins] loaded {cfg['robot_id']} ({cfg['type']}) from {cfg_path}")
+            except Exception as e:
+                print(f"[plugins] failed to load {cfg_path}: {e}")
+
 
         self.base_controller = BaseController(self)
 
@@ -536,6 +590,13 @@ class MujocoServer:
 
         self.camera_manager.close()
 
+        for plugin in self.plugins:
+            if hasattr(plugin, "on_close"):
+                try:
+                    plugin.on_close()
+                except Exception:
+                    pass
+
         if hasattr(self, "zmq_publisher") and self.zmq_publisher is not None:
             self.zmq_publisher.close()
             self.zmq_publisher = None
@@ -644,6 +705,14 @@ class MujocoServer:
         self.physics_fps_counter.tick(sim_time=data.time)
         self.pull_status()
         self.push_command(self.data_proxies.get_command())
+
+        # ---- 机器人插件 step ----
+        for plugin in self.plugins:
+            try:
+                plugin.step(data)
+            except Exception as e:
+                print(f"[plugins] {plugin.robot_id} step failed: {e}")
+
         # ---- LiDAR 扫描 ----
         # self._lidar_counter += 1
         # if self._lidar_counter % self._lidar_interval == 0:
@@ -753,6 +822,11 @@ class MujocoServer:
 
             actuator_name = command.actuator_name
             pos = command.pos
+
+             # G1/Go2 插件的 actuator，直接写 ctrl，不走 Actuators 枚举
+            if actuator_name.startswith("g1_") or actuator_name.startswith("go2_"):
+                data.actuator(actuator_name).ctrl = pos
+                continue
 
             # 找到对应的 Actuators 枚举
             try:

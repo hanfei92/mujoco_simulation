@@ -1,0 +1,37 @@
+robot_id: g1
+type: g1
+policy_path: policy/motion.pt
+decimation: 10
+gait_period: 0.8
+num_obs: 47
+num_actions: 12
+
+# 12 个腿部关节，顺序必须和训练时一致
+leg_joint_names:
+  - left_hip_pitch_joint
+  - left_hip_roll_joint
+  - left_hip_yaw_joint
+  - left_knee_joint
+  - left_ankle_pitch_joint
+  - left_ankle_roll_joint
+  - right_hip_pitch_joint
+  - right_hip_roll_joint
+  - right_hip_yaw_joint
+  - right_knee_joint
+  - right_ankle_pitch_joint
+  - right_ankle_roll_joint
+
+default_angles: [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0]
+kps: [100, 100, 100, 150, 40, 40, 100, 100, 100, 150, 40, 40]
+kds: [2, 2, 2, 4, 2, 2, 2, 2, 2, 4, 2, 2]
+
+ang_vel_scale: 0.25
+dof_vel_scale: 0.05
+action_scale: 0.25
+cmd_scale: [2.0, 2.0, 0.25]
+
+# 非腿部关节冻结的默认姿态（腰部、手臂、头部）
+freeze_joints:
+  waist_yaw_joint: 0.0
+  left_shoulder_pitch_joint: 0.0
+  # ... 按 MJCF 补全
