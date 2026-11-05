@@ -29,12 +29,13 @@ services:
     networks:
       - sim-net
     depends_on:
-      mujoco-wrapper:
-        condition: service_healthy
+      - mujoco-wrapper
+      # mujoco-wrapper:
+      #   condition: service_healthy
     environment:
       - ZMQ_LIDAR_ENDPOINT=tcp://mujoco-wrapper:5555
-      - ROS_MASTER_URI=http://ros-bridge:11311
-      - ROS_DOMAIN_ID=42
+      # - ROS_MASTER_URI=http://ros-bridge:11311
+      # - ROS_DOMAIN_ID=42
 
   agent:
     build:

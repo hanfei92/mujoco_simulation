@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package aidea.image;
+
+message Header {
+  int64 stamp_sec = 1;
+  int64 stamp_nsec = 2;
+  string frame_id = 3;
+}
+
+// 对齐 sensor_msgs/Image
+message Image {
+  Header header = 1;
+  uint32 height = 2;
+  uint32 width = 3;
+  string encoding = 4;       // "rgb8" / "bgr8" / "mono8" / "32FC1"
+  uint32 step = 5;
+  bool is_bigendian = 6;
+  bytes data = 7;
+}

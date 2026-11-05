@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package aidea.pose;
+
+message Header {
+  int64 stamp_sec = 1;
+  int64 stamp_nsec = 2;
+  string frame_id = 3;
+}
+
+// 对齐 geometry_msgs/PoseStamped
+message PoseStamped {
+  Header header = 1;
+  double position_x = 2;
+  double position_y = 3;
+  double position_z = 4;
+  double orientation_x = 5;
+  double orientation_y = 6;
+  double orientation_z = 7;
+  double orientation_w = 8;
+}

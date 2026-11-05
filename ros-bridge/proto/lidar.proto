@@ -1,0 +1,18 @@
+syntax = "proto3";
+package aidea.lidar;
+
+message Header {
+  int64 stamp_sec = 1;
+  int64 stamp_nsec = 2;
+  string frame_id = 3;
+}
+
+message PointCloud2 {
+  Header header = 1;
+  uint32 height = 2;
+  uint32 width = 3;
+  uint32 point_step = 4;
+  uint32 row_step = 5;
+  bool is_dense = 6;
+  bytes data = 7;
+}
