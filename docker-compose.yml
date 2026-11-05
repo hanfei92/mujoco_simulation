@@ -34,9 +34,21 @@ services:
       #   condition: service_healthy
     environment:
       - ZMQ_LIDAR_ENDPOINT=tcp://mujoco-wrapper:5555
-      # - ROS_MASTER_URI=http://ros-bridge:11311
-      # - ROS_DOMAIN_ID=42
 
+  ros2-bridge:
+    profiles: ["ros"]
+    build:
+      context: ./ros2-bridge
+      dockerfile: Dockerfile
+    container_name: ros2-bridge
+    networks:
+      - sim-net
+    depends_on:
+      - mujoco-wrapper
+    environment:
+      - ZMQ_LIDAR_ENDPOINT=tcp://mujoco-wrapper:5555
+      - ROS_DOMAIN_ID=42
+      - PYTHONUNBUFFERED=1
   agent:
     build:
       context: ./agent

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package aidea.joint_state;
+
+message Header {
+  int64 stamp_sec = 1;
+  int64 stamp_nsec = 2;
+  string frame_id = 3;
+}
+
+// 对齐 sensor_msgs/JointState
+message JointState {
+  Header header = 1;
+  repeated string name = 2;
+  repeated double position = 3;
+  repeated double velocity = 4;
+  repeated double effort = 5;
+}
