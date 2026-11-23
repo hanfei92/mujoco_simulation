@@ -222,7 +222,13 @@ class MujocoServerCameraManagerSync:
         # print(f"[debug] _render_camera {camera.name} acquiring lock", flush=True)
         with self.camera_lock:
             # print(f"[debug] _render_camera {camera.name} lock acquired", flush=True)
-            renderer.update_scene(data=self.mujoco_server.mjdata, camera=camera.camera_name_in_mjcf)
+            if camera == AideaCameras.cam_pf_overview:
+                renderer.update_scene(
+                    data=self.mujoco_server.mjdata,
+                    camera=self._overview_camera())
+            else:
+                renderer.update_scene(data=self.mujoco_server.mjdata,
+                                      camera=camera.camera_name_in_mjcf)
             render = renderer.render()
             # print(f"[debug] _render_camera {camera.name} rendered", flush=True)
 
@@ -239,6 +245,24 @@ class MujocoServerCameraManagerSync:
             raise
 
         return (camera, render)
+
+    def _overview_camera(self):
+        """Free camera for the dashboard overview (orbit/zoom from the UI)."""
+        view = {}
+        try:
+            commands = self.mujoco_server.data_proxies.get_robot_command() or {}
+            view = commands.get('view') or {}
+        except Exception:
+            view = {}
+        camera = mujoco.MjvCamera()
+        camera.type = mujoco.mjtCamera.mjCAMERA_FREE
+        camera.lookat[0] = float(view.get('lookat_x', 0.0))
+        camera.lookat[1] = float(view.get('lookat_y', 0.0))
+        camera.lookat[2] = float(view.get('lookat_z', 0.0))
+        camera.distance = float(view.get('distance', 9.0))
+        camera.azimuth = float(view.get('azimuth', 90.0))
+        camera.elevation = float(view.get('elevation', -89.0))
+        return camera
 
     def _remove_camera_renderer(self, camera: AideaCameras):
         """

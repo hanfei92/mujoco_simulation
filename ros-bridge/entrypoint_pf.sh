@@ -14,6 +14,7 @@ sleep 3
 # same generated node name anyway.
 
 python3 /app/pf_sim/pose_tf.py &
+python3 /app/pf_sim/lidar_bridge.py &
 python3 /app/pf_sim/camera_bridge.py &
 python3 /app/pf_sim/sim_world.py &
 python3 /app/pf_sim/cmd_vel_bridge.py &

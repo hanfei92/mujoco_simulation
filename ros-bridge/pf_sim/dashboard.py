@@ -50,10 +50,10 @@ PAGE = b"""<!doctype html>
  select{background:#2b3a55;color:#dfe3ea;border:0;padding:4px;width:100%}
  #summary{white-space:pre-wrap;font-size:11px;color:#a9b7c9;max-height:180px;overflow:auto}
 </style></head><body><div class="wrap">
-<div class="main"><img src="/stream/overview"></div>
+<div class="main"><img id="overview" src="/stream/overview"></div>
 <div class="side">
   <div class="card"><h3>ROBOT CAMERA</h3><img class="sensor" src="/stream/camera"></div>
-  <div class="card"><h3>LIDAR (TOP-DOWN, 20 m)</h3><img class="sensor" src="/stream/lidar"></div>
+  <div class="card"><h3>LIDAR 3D (drag to orbit, wheel to zoom)</h3><img id="lidar" class="sensor" src="/stream/lidar"></div>
   <div class="card" id="status"><h3>STATUS</h3><div>loading...</div></div>
   <div class="card"><h3>VALIDATION</h3>
     <select id="session"></select>
@@ -93,6 +93,23 @@ async function replay(){
   const r = await fetch('/api/replay?name='+encodeURIComponent(name), {method:'POST'});
   document.getElementById('summary').textContent = await r.text();
 }
+function orbit(id, url){
+  const img = document.getElementById(id);
+  let dragging=false, lx=0, ly=0;
+  img.addEventListener('mousedown', e=>{dragging=true;lx=e.clientX;ly=e.clientY;e.preventDefault();});
+  window.addEventListener('mouseup', ()=>dragging=false);
+  window.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    const dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
+    fetch(url+'?daz='+(-dx*0.5)+'&del='+(dy*0.4));
+  });
+  img.addEventListener('wheel', e=>{
+    e.preventDefault();
+    fetch(url+'?dist='+(e.deltaY>0?1.2:-1.2));
+  }, {passive:false});
+}
+orbit('overview','/api/view');
+orbit('lidar','/api/lidar_view');
 poll(); setInterval(poll, 1000); sessions();
 </script></body></html>"""
 
@@ -110,6 +127,16 @@ class Dashboard(object):
         self.status = {'state': '-', 'tracks': 0, 'cmd': '-', 'person': '-',
                        'reason': '-'}
         self.robot = (0.0, 0.0, 0.0)
+        self.view = {'azimuth': 90.0, 'elevation': -60.0, 'distance': 9.0}
+        self.lidar_view = {'azimuth': 60.0, 'elevation': -25.0, 'distance': 14.0}
+        endpoint = rospy.get_param('~zmq_endpoint', 'tcp://mujoco-wrapper:5555')
+        self.cmd_endpoint = rospy.get_param('~zmq_command_endpoint',
+                                            'tcp://mujoco-wrapper:5556')
+        self.view_context = zmq.Context()
+        self.view_push = self.view_context.socket(zmq.PUSH)
+        self.view_push.setsockopt(zmq.LINGER, 0)
+        self.view_push.connect(self.cmd_endpoint)
+        self._send_view()
         self.points = np.zeros((0, 3))
 
         rospy.Subscriber('/pf_cam/overview', Image, self._overview_cb, queue_size=1)
@@ -129,6 +156,30 @@ class Dashboard(object):
                                           self._make_handler())
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         rospy.loginfo('dashboard on http://0.0.0.0:%d/', self.port)
+
+    def _send_view(self):
+        import command_pb2
+        command = command_pb2.Command()
+        command.kind = 'view'
+        command.x = self.robot[0]
+        command.y = self.robot[1]
+        command.z = 0.0
+        command.vx = self.view['distance']
+        command.vy = self.view['azimuth']
+        command.omega = self.view['elevation']
+        try:
+            self.view_push.send(command.SerializeToString(), zmq.NOBLOCK)
+        except zmq.ZMQError:
+            pass
+
+    def lookat_person(self):
+        person = self.status.get('person') or '-'
+        if person != '-':
+            try:
+                x, y = [float(part) for part in person.split(',')]
+                self.view['lookat'] = (x, y)
+            except ValueError:
+                pass
 
     # ---------------- inputs ----------------
     def _store(self, key, message, draw=None):
@@ -206,35 +257,59 @@ class Dashboard(object):
             self.points = points.reshape(-1, 3)
 
     def _lidar_render_loop(self):
-        size = 480
-        span = 16.0
+        """RViz-like 3D point cloud: orbit angles come from the page."""
+        width, height = 560, 480
+        focal = 420.0
         while not rospy.is_shutdown():
-            canvas = np.zeros((size, size, 3), dtype=np.uint8)
-            canvas[:] = (18, 20, 24)
+            canvas = np.zeros((height, width, 3), dtype=np.uint8)
+            canvas[:] = (16, 18, 22)
             points = self.points
             if len(points):
-                # subsample: the raw cloud has ~86k points
-                step = max(1, len(points) // 20000)
-                sample = points[::step]
-                x = (sample[:, 0] / span * size + size / 2).astype(np.int32)
-                y = (size / 2 - sample[:, 1] / span * size).astype(np.int32)
-                mask = ((x >= 0) & (x < size) & (y >= 0) & (y < size) &
-                        (sample[:, 2] > -0.5) & (sample[:, 2] < 2.5))
-                # 2x2 splat so the cloud reads at dashboard scale
-                for dy, dx in ((0, 0), (0, 1), (1, 0), (1, 1)):
-                    yy = np.clip(y[mask] + dy, 0, size - 1)
-                    xx = np.clip(x[mask] + dx, 0, size - 1)
-                    canvas[yy, xx] = (120, 200, 255)
-            ox, oy, yaw = self.robot
-            cx = int(ox / span * size + size / 2)
-            cy = int(size / 2 - oy / span * size)
-            cv2.drawMarker(canvas, (cx, cy), (80, 160, 255),
-                           cv2.MARKER_TRIANGLE_UP, 12, 2)
-            heading = int(18 * math.sin(yaw)), int(-18 * math.cos(yaw))
-            cv2.line(canvas, (cx, cy), (cx + heading[0], cy + heading[1]),
-                     (80, 160, 255), 2)
-            cv2.drawMarker(canvas, (cx, cy), (80, 160, 255), cv2.MARKER_CROSS,
-                           4, 1)
+                step = max(1, len(points) // 25000)
+                sample = np.asarray(points[::step], dtype=np.float64)
+                sample = sample - np.array([self.robot[0], self.robot[1], 0.0])
+                azimuth = math.radians(self.lidar_view['azimuth'])
+                elevation = math.radians(self.lidar_view['elevation'])
+                ca, sa = math.cos(azimuth), math.sin(azimuth)
+                ce, se = math.cos(elevation), math.sin(elevation)
+                # world -> view: rotate around z (yaw), then around x (pitch)
+                x = sample[:, 0] * ca + sample[:, 1] * sa
+                y = -sample[:, 0] * sa + sample[:, 1] * ca
+                z = sample[:, 2]
+                y2 = y * ce - z * se
+                z2 = y * se + z * ce
+                depth = x + self.lidar_view['distance']
+                mask = depth > 0.5
+                u = (focal * y2[mask] / depth[mask] + width / 2)
+                v = (height / 2 - focal * z2[mask] / depth[mask])
+                height_norm = np.clip((sample[mask, 2] + 0.5) / 3.0, 0, 1)
+                colours = np.stack([np.full_like(height_norm, 255),
+                                    np.clip(255 * (1 - height_norm), 0, 255),
+                                    np.clip(255 * height_norm, 0, 255)],
+                                   axis=1).astype(np.uint8)
+                ui = np.clip(u.astype(np.int32), 0, width - 1)
+                vi = np.clip(v.astype(np.int32), 0, height - 1)
+                inside = (u >= 0) & (u < width) & (v >= 0) & (v < height)
+                for dy, dx in ((0, 0), (0, 1), (1, 0)):
+                    yy = np.clip(vi + dy, 0, height - 1)
+                    xx = np.clip(ui + dx, 0, width - 1)
+                    canvas[yy[inside], xx[inside]] = colours[inside]
+                # robot marker at the origin of the view
+                origin = np.zeros((1, 3))
+                ox = 0.0
+                oy = 0.0
+                oz = 1.0
+                y2o = oy * ce - oz * se
+                z2o = oy * se + oz * ce
+                depth_o = ox + self.lidar_view['distance']
+                cu = int(focal * y2o / depth_o + width / 2)
+                cv2_ = int(height / 2 - focal * z2o / depth_o)
+                cv2.drawMarker(canvas, (cu, cv2_), (80, 160, 255),
+                               cv2.MARKER_TRIANGLE_UP, 14, 2)
+            cv2.putText(canvas, 'az %.0f  el %.0f  d %.1f' % (
+                self.lidar_view['azimuth'], self.lidar_view['elevation'],
+                self.lidar_view['distance']), (8, 18),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (150, 170, 200), 1)
             with self.lock:
                 self.frames['lidar'] = canvas
                 self.counters['lidar'] += 1
@@ -249,7 +324,9 @@ class Dashboard(object):
                             0.6, colour, 2)
 
     # ---------------- outputs ----------------
-    def jpeg(self, key, quality=75):
+    def jpeg(self, key, quality=None):
+        if quality is None:
+            quality = 88 if key == 'overview' else 78
         with self.lock:
             frame = self.frames.get(key)
             frame = None if frame is None else frame.copy()
@@ -258,6 +335,32 @@ class Dashboard(object):
         ok, buffer = cv2.imencode('.jpg', frame,
                                   [int(cv2.IMWRITE_JPEG_QUALITY), quality])
         return buffer.tobytes() if ok else None
+
+    def adjust_view(self):
+        from urllib.parse import parse_qs, urlparse
+        query = parse_qs(urlparse(self.path_query).query)
+        for key, field in (('daz', 'azimuth'), ('del', 'elevation'),
+                           ('dist', 'distance')):
+            if key in query:
+                self.view[field] += float(query[key][0])
+        self.view['elevation'] = max(-89.0, min(-5.0, self.view['elevation']))
+        self.view['distance'] = max(3.0, min(25.0, self.view['distance']))
+        self.view['azimuth'] %= 360.0
+        self._send_view()
+        return self.view
+
+    def adjust_lidar_view(self):
+        from urllib.parse import parse_qs, urlparse
+        query = parse_qs(urlparse(self.path_query).query)
+        for key, field in (('daz', 'azimuth'), ('del', 'elevation'),
+                           ('dist', 'distance')):
+            if key in query:
+                self.lidar_view[field] += float(query[key][0])
+        self.lidar_view['elevation'] = max(-80.0, min(80.0,
+                                                      self.lidar_view['elevation']))
+        self.lidar_view['distance'] = max(4.0, min(40.0,
+                                                   self.lidar_view['distance']))
+        return self.lidar_view
 
     def sessions(self):
         try:
@@ -285,6 +388,7 @@ class Dashboard(object):
 
             def do_GET(self):
                 path = self.path.split('?')[0]
+                view.path_query = self.path
                 if path in ('/', '/index.html'):
                     return self._send(200, PAGE, 'text/html; charset=utf-8')
                 if path.startswith('/stream/'):
@@ -294,6 +398,10 @@ class Dashboard(object):
                     payload['robot'] = '{:.2f},{:.2f}'.format(view.robot[0],
                                                               view.robot[1])
                     return self._send(200, json.dumps(payload))
+                if path == '/api/view':
+                    return self._send(200, json.dumps(view.adjust_view()))
+                if path == '/api/lidar_view':
+                    return self._send(200, json.dumps(view.adjust_lidar_view()))
                 if path == '/api/sessions':
                     return self._send(200, json.dumps({'sessions': view.sessions()}))
                 if path == '/api/summary':

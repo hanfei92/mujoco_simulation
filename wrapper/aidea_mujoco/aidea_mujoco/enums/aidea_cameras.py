@@ -205,8 +205,8 @@ class AideaCameras(Enum):
             return CameraSettings(
                 field_of_view_vertical_in_degrees=50.0,
                 focal=(0.0, 0.0),
-                width=960,
-                height=540,
+                width=1280,
+                height=720,
                 rotate_number_of_times=0,
             )
 

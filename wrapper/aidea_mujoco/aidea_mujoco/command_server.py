@@ -45,6 +45,20 @@ class CommandServer:
                 print(f"[command] apply failed: {exc}")
 
     def _apply(self, command):
+        if command.kind == "view":
+            # dashboard camera control: no protobuf change needed, reuse x/y/yaw
+            cmds = self.data_proxies.get_robot_command() or {}
+            cmds["view"] = {
+                "lookat_x": float(command.x),
+                "lookat_y": float(command.y),
+                "lookat_z": float(command.z),
+                "distance": float(command.vx),
+                "azimuth": float(command.vy),
+                "elevation": float(command.omega),
+            }
+            self.data_proxies.set_robot_command(cmds)
+            return
+
         # kind="robot" drives the wheeled base (the observer);
         # kind="person" drives the G1 (a walking velocity for the target).
         if command.kind == "person":

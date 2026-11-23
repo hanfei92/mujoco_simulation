@@ -14,4 +14,5 @@ message Command {
   double x = 7;         // mocap person position, world frame
   double y = 8;
   double yaw = 9;
+  double z = 10;        // world z (view lookat height)
 }

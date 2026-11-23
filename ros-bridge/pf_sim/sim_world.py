@@ -96,8 +96,13 @@ class SimWorld(object):
         grid = np.zeros((size, size), dtype=np.int8)
         if len(self.lidar_points):
             pts = self.lidar_points
-            # only points near the floor matter for a 2D costmap
+            # only points near the floor matter for a 2D costmap, and points
+            # right next to the robot are its own body (the lidar only excludes
+            # the airy body), so they must not be treated as obstacles
             mask = (np.abs(pts[:, 2]) < 1.5)
+            radius = np.hypot(pts[:, 0] - self.robot[0],
+                              pts[:, 1] - self.robot[1])
+            mask &= radius > 0.45
             pts = pts[mask]
             if len(pts):
                 ix = ((pts[:, 0] - origin_x) / self.resolution).astype(np.int32)
