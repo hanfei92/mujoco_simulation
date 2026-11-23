@@ -146,20 +146,40 @@ docker run --rm --entrypoint bash \
 4. **真实 wrapper 之前根本没开相机**：`mcp_server._start_sim` 传的 `cameras_to_use=[]`，
    现在改为 `[AideaCameras.cam_nav_rgb]`。
 
-## 闭环运动的已知问题（未完成）
+## 闭环运动：定位到的根因与修复
 
-管理器能正确决策并调用发布，但**底盘没动**，本轮没跑通闭环：
+**现象**：管理器日志 `search dir=1.0 angular=0.45 published=True`，但 `/cmd_vel` 采样
+113 帧全是 0，底盘不动。
 
-- 管理器日志：`search dir=1.0 angular=0.45 published=True`（`publish_guarded` 返回成功）
-- 同时 `/cmd_vel` 采样 113 帧全部 `angular.z = 0`
-- 对照实验：停掉管理器（`PF_MANAGER=0`）后，用 MCP `set_base_velocity(0.5, 0.5)`，
-  底盘 3 秒走了约 1 m —— **仿真底盘和 ZMQ 命令通路都是好的**
-- 模型对照：直接给四个轮子 `ctrl=20` 跑 3000 步，位移 3.72 m —— 模型动力学也正常
+**定位过程**（每一步都做了对照实验）：
 
-所以问题在管理器→`/cmd_vel` 这一段：要么走了 `publish_guarded` 的 fallback 分支
-（发布 0 但返回 True），要么 `publish_raw` 之后被别的路径覆盖。下一步该在
-`publish_guarded` 里区分「candidate 被拒」和「fallback 成功」，以及确认
-`/cmd_vel` 上没有第二个发布者。
+1. 停掉管理器，用 MCP `set_base_velocity(0.5, 0.5)` → 底盘 3 秒走 1 m；
+2. 直接给四个轮子 `ctrl=20` → 3000 步位移 3.72 m；
+3. `rostopic pub /cmd_vel` 1.0 rad/s → 3 秒转 0.606 rad（桥接→ZMQ→底盘全通）；
+4. 打开 `publish_guarded` 的分支日志，看到 `[GUARD] accept w=0.10/0.20` —— 实际发出去的是
+   **slew 限速后的爬升值**，不是 0.45。
+
+**根因**：SEARCH 每 tick 都走斜率限制，而目标在视场边缘时管理器的状态会在
+`SEARCHING` 和 `OBSERVING` 之间抖动；每次 `OBSERVING/HOLD` 都会调用 `publish_stop()`，
+把 `current_w` 清零，于是 0.45 的爬升永远从头开始，平均只有 ~0.02 rad/s，
+`/cmd_vel` 大部分帧是 0。
+
+**修复**：扫视（SEARCH）是定速巡视，不需要轨迹平滑，改成 `publish_guarded(..., slew=False)`
+直接给满速。修复后 `/cmd_vel` 中 0.45 占 ~54%，其余是目标短暂回到视场时的 HOLD。
+
+**修复后验证**：人走出视场 → 底盘转向搜索 → 人回到视场 → 状态自动回到 `OBSERVING`
+（GT 位姿 15 Hz、tracks 15 Hz）。
+
+> 注意：仿真里四轮打滑，指令 0.45 rad/s 实际只有 ~0.11–0.2 rad/s 的转动（同样的轮速在
+> 隔离模型里 1 秒只转 0.111 rad）。这是模型摩擦特性，不是控制器问题。
+
+涉及 `person_following_ws` 的改动（该目录不是 git 仓库）：
+
+- `observation_manager_supervisor.py`：SEARCH 改用 `slew=False`；增加 2 s 节流的
+  `search dir/angular/acc/published` 诊断日志。
+- `map_person_follow_supervisor_legacy.py`：`publish_guarded` 的分支判定、
+  `trajectory_is_safe` 的拒绝原因、`publish_raw` 的实际下发值，全部挂在
+  `~observe_debug_verbose` 开关后面（默认关闭）。
 
 ## 限制
 
