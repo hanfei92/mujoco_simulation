@@ -1,0 +1,27 @@
+FROM ros:noetic-ros-base
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake python3-pip python3-numpy python3-zmq \
+    ros-noetic-message-generation ros-noetic-tf2-ros ros-noetic-nav-msgs \
+    ros-noetic-sensor-msgs ros-noetic-visualization-msgs \
+    ros-noetic-geometry-msgs \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir protobuf grpcio-tools
+
+WORKDIR /app
+
+COPY proto/ ./proto/
+RUN python3 -m grpc_tools.protoc -I proto --python_out=. proto/*.proto
+
+COPY pf_sim/ ./pf_sim/
+RUN mkdir -p /opt/pf_ws/src && cp -r pf_sim/msgs/* /opt/pf_ws/src/ \
+    && bash -lc "source /opt/ros/noetic/setup.bash && cd /opt/pf_ws \
+       && catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3"
+
+COPY entrypoint_pf.sh /entrypoint_pf.sh
+RUN chmod +x /entrypoint_pf.sh
+
+ENTRYPOINT ["/entrypoint_pf.sh"]

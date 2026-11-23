@@ -1,0 +1,20 @@
+# Person-following integration overlay.
+#   docker compose -f docker-compose.yml -f docker-compose.pf-sim.yml \
+#       --profile pf up -d mujoco-wrapper pf-sim
+services:
+  pf-sim:
+    build:
+      context: ./ros-bridge
+      dockerfile: Dockerfile.pf-sim
+    container_name: pf-sim
+    networks:
+      - sim-net
+    depends_on:
+      - mujoco-wrapper
+    environment:
+      - ZMQ_LIDAR_ENDPOINT=tcp://mujoco-wrapper:5555
+      - ZMQ_CMD_ENDPOINT=tcp://mujoco-wrapper:5556
+      - PF_MANAGER=${PF_MANAGER:-1}
+    volumes:
+      - ../person_following_ws:/opt/person_following_ws:ro
+    profiles: ["pf"]
