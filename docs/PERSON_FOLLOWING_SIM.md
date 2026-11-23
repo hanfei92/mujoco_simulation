@@ -59,8 +59,8 @@ docker run -d --name mujoco-wrapper --network sim-net --device nvidia.com/gpu=al
   -e ROBOT_PLUGIN_CONFIGS=/app/aidea_mujoco/aidea_mujoco/plugins/g1/config.yaml \
   mujoco_simulation-mujoco-wrapper:latest
 
-# 2) 等 MCP 就绪（不等就调 mcp_call.sh 会报 "no SID"）
-docker logs -f mujoco-wrapper | grep -m1 "simulation ready"
+# 2) 等仿真就绪（等 MCP 能真正应答，比 grep 日志可靠）
+scripts/wait_ready.sh --wrapper
 
 # 3) 桥接 + 跟踪 + 管理器（日志写进 host，方便可视化）
 mkdir -p tmp/sim_logs tmp/sim_sessions
@@ -75,7 +75,10 @@ docker run -d --name pf-sim --network sim-net \
   mujoco_simulation-pf-sim:latest
 
 # 4) 等跟踪节点起来
-docker logs -f pf-sim | grep -m1 "monocular_people_tracking started"
+scripts/wait_ready.sh --bridge
+
+# 一次等两个（默认就是 both）
+scripts/wait_ready.sh
 
 # 5) 按车头朝向把人放到前方 2 m
 docker exec mujoco-wrapper bash /app/mcp_call.sh move_g1_to '{"x":1.9,"y":-0.64,"yaw":0}'
@@ -112,6 +115,13 @@ python3 scripts/summarize_pf_session.py \
     tmp/sim_sessions/doorway \
     tmp/sim_sessions/doorway/replay/replay-20261123-084316
 ```
+
+`mcp_call.sh` 调无参工具时要传 `'{}'`（例如 `get_g1_state '{}'`），否则 JSON-RPC 报
+`Parse error`。
+
+容器里的 `print()` 曾经是块缓冲，`docker logs | grep "simulation ready"` 会一直卡住；
+现在两个镜像都设了 `PYTHONUNBUFFERED=1`，等待请优先用 `scripts/wait_ready.sh`
+（它以「MCP 工具调用成功 / 跟踪话题存在」为判据，比日志可靠）。
 
 回灌容器用 `--network none` + `ROS_IP=127.0.0.1`（否则 rosmaster 起不来），
 `/use_sim_time=true`，`_map_frame:=world`——仿真的地图坐标系和真机的 `map` 不同。
