@@ -39,6 +39,85 @@ pf-sim 内部：
 - 想换成真 YOLO：只替换 `gt_pose.py` 即可——它和其他节点唯一的接口就是
   `/pose_estimator/pose`。相机图像已经按 `sensor_msgs/Image` + `CameraInfo` 发出。
 
+## 启动顺序与命令
+
+顺序有依赖：wrapper 要先出 `simulation ready`，MCP 才能调；pf-sim 要先编译完跟踪节点，
+才有 `/monocular_people_tracking/tracks`；最后才摆人。
+
+```bash
+cd /home/amigo/project/RND/mujoco_simulation
+
+# 1) 仿真（带窗口）
+xhost +local:root
+docker rm -f mujoco-wrapper 2>/dev/null
+docker run -d --name mujoco-wrapper --network sim-net --device nvidia.com/gpu=all \
+  -e MUJOCO_GL=egl -e PYOPENGL_PLATFORM=egl -e MUJOCO_VIEWER=1 \
+  -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:rw \
+  -e ROBOT_MJCF_INCLUDES=/app/aidea_mujoco/mjcf/robots/g1/g1_12dof.xml \
+  -e ROBOT_PLUGIN_CONFIGS=/app/aidea_mujoco/aidea_mujoco/plugins/g1/config.yaml \
+  mujoco_simulation-mujoco-wrapper:latest
+
+# 2) 等 MCP 就绪（不等就调 mcp_call.sh 会报 "no SID"）
+docker logs -f mujoco-wrapper | grep -m1 "simulation ready"
+
+# 3) 桥接 + 跟踪 + 管理器（日志写进 host，方便可视化）
+mkdir -p tmp/sim_logs tmp/sim_sessions
+docker rm -f pf-sim 2>/dev/null
+docker run -d --name pf-sim --network sim-net \
+  -e ZMQ_LIDAR_ENDPOINT=tcp://mujoco-wrapper:5555 \
+  -e ZMQ_CMD_ENDPOINT=tcp://mujoco-wrapper:5556 \
+  -e PF_MANAGER=1 -e PF_TRACKER=real -e PF_PERSON_MODE=still \
+  -e PF_LOG_DIR=/tmp/person_follow_observe \
+  -v /home/amigo/project/RND/person_following_ws:/opt/person_following_ws:ro \
+  -v $PWD/tmp/sim_logs:/tmp/person_follow_observe \
+  mujoco_simulation-pf-sim:latest
+
+# 4) 等跟踪节点起来
+docker logs -f pf-sim | grep -m1 "monocular_people_tracking started"
+
+# 5) 按车头朝向把人放到前方 2 m
+docker exec mujoco-wrapper bash /app/mcp_call.sh move_g1_to '{"x":1.9,"y":-0.64,"yaw":0}'
+```
+
+## 测试指标与可视化
+
+运行数据有三层，从粗到细：
+
+| 方式 | 命令 | 看什么 |
+| --- | --- | --- |
+| MuJoCo 窗口 | `MUJOCO_VIEWER=1` | 车、G1、实时光照/几何是否正常 |
+| 实时表 | `python3 /app/pf_sim/dev_watch_loop.py 60 2` | t / x / y / yaw / 状态 / cmd / 轨迹数 |
+| 决策分布 | `python3 /app/pf_sim/dev_probe_decision.py 6` | 状态×动作计数、`/cmd_vel` 取值分布 |
+| 网页时间轴 | `python3 tools/ros_smoke/web_view.py --dir tmp/sim_logs --port 8781` | 机器人路径、FOV、候选点、状态时间线 |
+| 文本摘要 | `python3 scripts/summarize_pf_session.py tmp/sim_logs` | 状态占比、动作、拦截原因、评分项均值 |
+| 两次运行对比 | `python3 scripts/summarize_pf_session.py run_a run_b` | 参数改动的回归差异 |
+
+网页时间轴用的是 `person_following_ws` 里现成的 `tools/ros_smoke/web_view.py`（纯标准库），
+管理器每 0.5 s 写的 JSONL 直接在浏览器里回放，不需要 RViz。
+
+## 录制与回灌
+
+```bash
+# 录一段（默认不含图像；图像 800x600 每秒约 20 MB）
+DURATION=60 TAG=doorway scripts/record_pf_session.sh
+RECORD_IMAGE=1 DURATION=30 scripts/record_pf_session.sh   # 需要图像时
+
+# 回灌：bag 里的 TF/tracks/target/map/costmap 喂给管理器，仿真不参与
+scripts/replay_pf_session.sh tmp/sim_sessions/doorway
+
+# 对比实时运行与回灌结果
+python3 scripts/summarize_pf_session.py \
+    tmp/sim_sessions/doorway \
+    tmp/sim_sessions/doorway/replay/replay-20261123-084316
+```
+
+回灌容器用 `--network none` + `ROS_IP=127.0.0.1`（否则 rosmaster 起不来），
+`/use_sim_time=true`，`_map_frame:=world`——仿真的地图坐标系和真机的 `map` 不同。
+
+实测：8 s 的录像回放后是 16 条决策、8.95 s、visible 0.81、OBSERVING 89%，与实时运行逐项一致。
+
 ## 打开仿真窗口
 
 `MujocoServer.run()` 只走 headless 分支（`show_viewer_ui` 参数被忽略），

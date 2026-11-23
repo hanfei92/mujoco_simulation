@@ -60,7 +60,7 @@ if [ "${PF_MANAGER:-0}" = "1" ]; then
         _costmap_topic:=/move_base/local_costmap/costmap \
         _observe_global_costmap_topic:=/move_base/global_costmap/costmap \
         _observe_static_map_topic:=/map \
-        _observe_debug_log_dir:=/tmp/person_follow_observe \
+        _observe_debug_log_dir:=${PF_LOG_DIR:-/tmp/person_follow_observe} \
         _observe_debug_markers:=false &
 fi
 
