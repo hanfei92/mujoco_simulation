@@ -25,6 +25,8 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
+      # 1 = open the mujoco viewer window (needs X11), 0 = headless
+      - MUJOCO_VIEWER=${MUJOCO_VIEWER:-1}
       - ROBOT_MJCF_INCLUDES=/app/aidea_mujoco/mjcf/robots/g1/g1_12dof.xml
       - ROBOT_PLUGIN_CONFIGS=/app/aidea_mujoco/aidea_mujoco/plugins/g1/config.yaml
     volumes:

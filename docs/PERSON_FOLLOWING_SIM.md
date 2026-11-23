@@ -39,6 +39,39 @@ pf-sim 内部：
 - 想换成真 YOLO：只替换 `gt_pose.py` 即可——它和其他节点唯一的接口就是
   `/pose_estimator/pose`。相机图像已经按 `sensor_msgs/Image` + `CameraInfo` 发出。
 
+## 打开仿真窗口
+
+`MujocoServer.run()` 只走 headless 分支（`show_viewer_ui` 参数被忽略），
+带窗口的实现是 `MujocoServerPassive`（内部用 `mujoco.viewer.launch_passive`）。
+所以默认情况下**不会弹窗**，需要 `MUJOCO_VIEWER=1`：
+
+```bash
+MUJOCO_VIEWER=1 scripts/run_pf_sim.sh
+```
+
+容器里必须有 X11：
+
+```bash
+xhost +local:root
+docker run -d --name mujoco-wrapper --network sim-net --device nvidia.com/gpu=all \
+  -e MUJOCO_GL=egl -e PYOPENGL_PLATFORM=egl \
+  -e MUJOCO_VIEWER=1 \
+  -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:rw \
+  mujoco_simulation-mujoco-wrapper:latest
+```
+
+验证窗口真的开了：
+
+```bash
+DISPLAY=:1 xwininfo -root -tree | grep -i mujoco
+# 0x... "MuJoCo : aidea scene": ("MuJoCo" "MuJoCo")  2504x1376+0+37
+```
+
+`MUJOCO_VIEWER=0` 回到无头模式（远程/无桌面时用）。
+窗口模式下相机仍然照常发布 `image`/`pose`，桥接不受影响。
+
 ## 运行
 
 ```bash

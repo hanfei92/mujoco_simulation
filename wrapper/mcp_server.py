@@ -1,5 +1,6 @@
 # wrapper/mcp_server.py
 """MCP Server：LiDAR 快照 + 底盘控制 + G1 模式/位移控制。"""
+import os
 import time
 import multiprocessing
 from multiprocessing import Manager, Process
@@ -29,8 +30,16 @@ def _start_sim():
     _data_proxies = MujocoServerProxies.default(_manager)
 
     multiprocessing.set_start_method("spawn", force=True)
+    # The base server's run() is headless-only; the passive server is the one
+    # that opens the mujoco viewer window.
+    server_class = MujocoServer
+    if os.environ.get('MUJOCO_VIEWER') == '1':
+        from aidea_mujoco.mujoco_server_passive import MujocoServerPassive
+
+        server_class = MujocoServerPassive
+
     _server_process = Process(
-        target=MujocoServer.launch_server,
+        target=server_class.launch_server,
         args=(
             None, None, 30.0, True,
             _stop_event, _data_proxies, [AideaCameras.cam_nav_rgb],
