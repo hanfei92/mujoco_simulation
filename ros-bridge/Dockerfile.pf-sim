@@ -6,7 +6,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake python3-pip python3-numpy python3-zmq \
     ros-noetic-message-generation ros-noetic-tf2-ros ros-noetic-nav-msgs \
     ros-noetic-sensor-msgs ros-noetic-visualization-msgs \
-    ros-noetic-geometry-msgs \
+    ros-noetic-geometry-msgs ros-noetic-tf ros-noetic-tf-conversions \
+    ros-noetic-cv-bridge ros-noetic-image-transport \
+    libopencv-dev libeigen3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --no-cache-dir protobuf grpcio-tools

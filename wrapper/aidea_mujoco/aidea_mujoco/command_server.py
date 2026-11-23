@@ -45,21 +45,26 @@ class CommandServer:
                 print(f"[command] apply failed: {exc}")
 
     def _apply(self, command):
-        cmds = self.data_proxies.get_robot_command() or {}
+        # kind="robot" drives the wheeled base (the observer);
+        # kind="person" drives the G1 (a walking velocity for the target).
         if command.kind == "person":
-            cmds["person"] = {"x": float(command.x), "y": float(command.y),
-                              "yaw": float(command.yaw)}
-        else:
+            cmds = self.data_proxies.get_robot_command() or {}
             robot_id = command.robot_id or "g1"
             entry = dict(cmds.get(robot_id, {}))
             entry["vx"] = float(command.vx)
             entry["wz"] = float(command.omega)
-            if command.vy:
-                entry["vy"] = float(command.vy)
-            if command.mode:
-                entry["mode"] = command.mode
+            entry["mode"] = command.mode or "walk"
             cmds[robot_id] = entry
-        self.data_proxies.set_robot_command(cmds)
+            self.data_proxies.set_robot_command(cmds)
+            return
+
+        from aidea_mujoco.datamodels.status_command import CommandBaseVelocity
+
+        status = self.data_proxies.get_command()
+        status.set_base_velocity(CommandBaseVelocity(
+            v_x=float(command.vx), v_y=float(command.vy),
+            omega=float(command.omega), trigger=True))
+        self.data_proxies.set_command(status)
 
     def close(self):
         self._running = False

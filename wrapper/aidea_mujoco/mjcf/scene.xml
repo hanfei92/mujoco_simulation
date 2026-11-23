@@ -4,8 +4,7 @@
   
   <!-- 2. 再加载办公室 -->
   <include file="office.xml"/>
-  <!-- person-following bridge: mocap target -->
-  <include file="person.xml"/>
+
   <!-- <include file="room-732.xml"/> -->
   <!-- <include file="hongkong.xml"/> -->
   

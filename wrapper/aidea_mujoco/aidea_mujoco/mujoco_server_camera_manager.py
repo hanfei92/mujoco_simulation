@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import math
 import platform
 import threading
 import time
@@ -11,6 +12,31 @@ from aidea_mujoco import config, utils
 from aidea_mujoco.enums.aidea_cameras import AideaCameras
 from aidea_mujoco.datamodels.status_aidea_camera import StatusAideaCameras
 from aidea_mujoco.utils import FpsCounter, switch_to_glfw_renderer
+
+
+def _matrix_to_quaternion(matrix):
+    """Rotation matrix -> (w, x, y, z)."""
+    trace = matrix[0][0] + matrix[1][1] + matrix[2][2]
+    if trace > 0.0:
+        scale = math.sqrt(trace + 1.0) * 2.0
+        return (0.25 * scale,
+                (matrix[2][1] - matrix[1][2]) / scale,
+                (matrix[0][2] - matrix[2][0]) / scale,
+                (matrix[1][0] - matrix[0][1]) / scale)
+    if matrix[0][0] > matrix[1][1] and matrix[0][0] > matrix[2][2]:
+        scale = math.sqrt(1.0 + matrix[0][0] - matrix[1][1] - matrix[2][2]) * 2.0
+        return ((matrix[2][1] - matrix[1][2]) / scale, 0.25 * scale,
+                (matrix[0][1] + matrix[1][0]) / scale,
+                (matrix[0][2] + matrix[2][0]) / scale)
+    if matrix[1][1] > matrix[2][2]:
+        scale = math.sqrt(1.0 + matrix[1][1] - matrix[0][0] - matrix[2][2]) * 2.0
+        return ((matrix[0][2] - matrix[2][0]) / scale,
+                (matrix[0][1] + matrix[1][0]) / scale, 0.25 * scale,
+                (matrix[1][2] + matrix[2][1]) / scale)
+    scale = math.sqrt(1.0 + matrix[2][2] - matrix[0][0] - matrix[1][1]) * 2.0
+    return ((matrix[1][0] - matrix[0][1]) / scale,
+            (matrix[0][2] + matrix[2][0]) / scale,
+            (matrix[1][2] + matrix[2][1]) / scale, 0.25 * scale)
 
 if TYPE_CHECKING:
     from aidea_mujoco.mujoco_server import MujocoServer
@@ -88,6 +114,7 @@ class MujocoServerCameraManagerSync:
         for camera, renderer in self.camera_renderers.items():
             (_, data) = self._render_camera(renderer, camera)
             new_imagery.set_camera_data(camera, data)
+            self._publish_image(camera, data)
 
 
         try:
@@ -98,6 +125,62 @@ class MujocoServerCameraManagerSync:
             traceback.print_exc()
             print(f"[debug] set_cameras FAILED: {e}")
             raise
+    def _publish_image(self, camera, render) -> None:
+        """Publish the forward camera frame for the person-following bridge."""
+        try:
+            import math
+
+            import mujoco
+            from aidea_mujoco.msg import image_pb2
+            from aidea_mujoco import utils
+
+            if camera != AideaCameras.cam_nav_rgb or render is None:
+                return
+            model = self.mujoco_server.mjmodel
+            data = self.mujoco_server.mjdata
+            camera_id = mujoco.mj_name2id(
+                model, mujoco.mjtObj.mjOBJ_CAMERA, camera.camera_name_in_mjcf)
+            if camera_id < 0:
+                return
+
+            height, width = int(render.shape[0]), int(render.shape[1])
+            fovy = float(model.cam_fovy[camera_id])
+            intrinsics = utils.compute_K(fovy, width, height)
+
+            position = data.cam_xpos[camera_id]
+            rotation = data.cam_xmat[camera_id].reshape(3, 3)
+            # MuJoCo camera: x right, y up, z back.  Optical: x right, y down,
+            # z forward, so flip the y and z axes.
+            optical = rotation @ np.diag([1.0, -1.0, -1.0])
+            qw, qx, qy, qz = _matrix_to_quaternion(optical)
+
+            message = image_pb2.Image()
+            message.header.stamp_sec = int(data.time)
+            message.header.stamp_nsec = int((data.time % 1.0) * 1e9)
+            message.header.frame_id = "pf_cam_optical"
+            message.height = height
+            message.width = width
+            message.encoding = "rgb8"
+            message.step = width * 3
+            message.is_bigendian = False
+            message.data = np.ascontiguousarray(
+                render.astype(np.uint8)).tobytes()
+            message.fx = float(intrinsics[0, 0])
+            message.fy = float(intrinsics[1, 1])
+            message.cx = float(intrinsics[0, 2])
+            message.cy = float(intrinsics[1, 2])
+            message.cam_x = float(position[0])
+            message.cam_y = float(position[1])
+            message.cam_z = float(position[2])
+            message.cam_qx = qx
+            message.cam_qy = qy
+            message.cam_qz = qz
+            message.cam_qw = qw
+            self.mujoco_server.zmq_publisher.publish(
+                "image", message.SerializeToString())
+        except Exception as exc:
+            print(f"[camera] image publish failed: {exc}")
+
     def _create_camera_renderer(self, for_camera: AideaCameras):
         settings = for_camera.initial_camera_settings
 

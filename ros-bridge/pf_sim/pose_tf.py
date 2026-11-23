@@ -7,7 +7,9 @@ import rospy
 import tf2_ros
 import zmq
 from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import Point, PointStamped
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Header
 
 import common_pb2
 import pose_pb2
@@ -21,6 +23,7 @@ def main():
 
     broadcaster = tf2_ros.TransformBroadcaster()
     odom_pub = rospy.Publisher('/odom', Odometry, queue_size=5)
+    person_pub = rospy.Publisher('/person_pose', PointStamped, queue_size=1)
 
     context = zmq.Context()
     sub = context.socket(zmq.SUB)
@@ -40,12 +43,18 @@ def main():
             envelope.ParseFromString(raw)
         except Exception:
             continue
-        if envelope.topic != 'pose':
+        if envelope.topic not in ('pose', 'person_pose'):
             continue
         pose = pose_pb2.PoseStamped()
         try:
             pose.ParseFromString(envelope.payload)
         except Exception:
+            continue
+        if envelope.topic == 'person_pose':
+            person_pub.publish(PointStamped(
+                header=Header(frame_id=parent, stamp=rospy.Time.now()),
+                point=Point(x=pose.position_x, y=pose.position_y,
+                            z=pose.position_z)))
             continue
 
         stamp = rospy.Time.now()

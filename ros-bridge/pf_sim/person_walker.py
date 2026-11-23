@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Scripted mocap person: drives the sim target and publishes its track."""
+"""Drive the simulated person (G1) along a path.
+
+The G1 plugin integrates its own base from a velocity command, so the walker
+only needs to keep sending a walk velocity.  Tracking output no longer comes
+from here: it comes from the real ``monocular_people_tracking`` node fed by
+``gt_pose.py``.  Set ``~publish_tracks:=true`` to fall back to ground-truth
+tracks (useful before the tracker is built).
+"""
 
 import math
 
@@ -14,12 +21,12 @@ import command_pb2
 
 class PersonWalker(object):
     def __init__(self):
-        self.frame = rospy.get_param('~frame', 'world')
-        self.mode = rospy.get_param('~path', 'circle')
-        self.speed = rospy.get_param('~speed', 0.4)
-        self.radius = rospy.get_param('~radius', 2.0)
-        self.center = rospy.get_param('~center', [1.5, 0.0])
-        self.period = 1.0 / max(1.0, rospy.get_param('~rate', 20.0))
+        self.mode = rospy.get_param('~mode', 'circle')
+        self.vx = rospy.get_param('~vx', 0.4)
+        self.wz = rospy.get_param('~wz', 0.25)
+        self.publish_tracks = rospy.get_param('~publish_tracks', False)
+        self.rate = rospy.get_param('~rate', 20.0)
+        self.start = rospy.Time.now()
 
         endpoint = rospy.get_param('~zmq_endpoint', 'tcp://mujoco-wrapper:5556')
         self.context = zmq.Context()
@@ -32,67 +39,43 @@ class PersonWalker(object):
         self.target_pub = rospy.Publisher(
             '/monocular_person_following/target', Target, queue_size=1)
 
-        self.started = rospy.Time.now()
-        self.state = self._pose_at(0.0)
-        rospy.Timer(rospy.Duration(self.period), self.tick)
-
-    def _pose_at(self, elapsed):
-        if self.mode == 'still':
-            x, y = self.center[0], self.center[1]
-            return x, y, 0.0, (0.0, 0.0)
-        if self.mode == 'line':
-            span = max(0.1, self.radius)
-            phase = (self.speed * elapsed) % (4.0 * span)
-            if phase < 2.0 * span:
-                x, vx = -span + phase, 1.0
-            else:
-                x, vx = span - (phase - 2.0 * span), -1.0
-            return (x + self.center[0], self.center[1],
-                    math.atan2(0.0, vx), (vx * self.speed, 0.0))
-        omega = self.speed / max(0.1, self.radius)
-        angle = omega * elapsed
-        x = self.center[0] + self.radius * math.cos(angle)
-        y = self.center[1] + self.radius * math.sin(angle)
-        vx = -self.radius * omega * math.sin(angle)
-        vy = self.radius * omega * math.cos(angle)
-        return x, y, math.atan2(vy, vx), (vx, vy)
+        rospy.Timer(rospy.Duration(1.0 / self.rate), self.tick)
 
     def tick(self, _event):
-        elapsed = (rospy.Time.now() - self.started).to_sec()
-        x, y, yaw, velocity = self._pose_at(elapsed)
-
         command = command_pb2.Command()
         command.kind = 'person'
-        command.x = x
-        command.y = y
-        command.yaw = yaw
+        command.robot_id = 'g1'
+        command.mode = 'walk'
+        if self.mode == 'still':
+            command.vx = 0.0
+            command.omega = 0.0
+        else:
+            command.vx = self.vx
+            command.omega = self.wz
         try:
             self.push.send(command.SerializeToString(), zmq.NOBLOCK)
         except zmq.ZMQError:
             pass
 
+        if not self.publish_tracks:
+            return
         stamp = rospy.Time.now()
         track = Track()
         track.id = 1
-        track.age = elapsed
-        track.pos.x = x
-        track.pos.y = y
+        track.age = (stamp - self.start).to_sec()
+        track.pos.x = 0.0
+        track.pos.y = 0.0
         track.pos.z = 0.0
         track.height = 1.6
-        track.vel.x = velocity[0]
-        track.vel.y = velocity[1]
-        track.vel.z = 0.0
         track.cov = [0.01 if index in (0, 6, 12, 18, 24) else 0.0
                      for index in range(25)]
         track.expected_measurement_mean = [0.0] * 4
         track.expected_measurement_cov = [0.0] * 16
-        # The supervisor only advances the strict target for associated tracks.
         track.associated = [Person()]
         track.associated_neck_ankle = []
-
         array = TrackArray()
         array.header.stamp = stamp
-        array.header.frame_id = self.frame
+        array.header.frame_id = 'world'
         array.tracks = [track]
         self.tracks_pub.publish(array)
 
@@ -100,10 +83,6 @@ class PersonWalker(object):
         target.header.stamp = stamp
         target.state.data = 'tracking'
         target.target_id = 1
-        target.track_ids = [1]
-        target.confidences = [0.9]
-        target.classifier_names = []
-        target.classifier_confidences = []
         self.target_pub.publish(target)
 
 

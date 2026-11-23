@@ -747,7 +747,7 @@ class MujocoServer:
 
 
     def _publish_pose(self) -> None:
-        """Publish the G1 pelvis pose for the person-following ROS bridge."""
+        """Publish base_link (observer) and g1_pelvis (target) poses."""
         try:
             import math
             import time
@@ -760,24 +760,26 @@ class MujocoServer:
             import mujoco
             from aidea_mujoco.msg import pose_pb2
 
-            body_id = mujoco.mj_name2id(self.mjmodel, mujoco.mjtObj.mjOBJ_BODY,
-                                        "g1_pelvis")
-            if body_id < 0:
-                return
-            position = self.mjdata.xpos[body_id]
-            rotation = self.mjdata.xmat[body_id].reshape(3, 3)
-            yaw = math.atan2(rotation[1, 0], rotation[0, 0])
+            for topic, body_name in (("pose", "base_link"),
+                                     ("person_pose", "g1_pelvis")):
+                body_id = mujoco.mj_name2id(self.mjmodel, mujoco.mjtObj.mjOBJ_BODY,
+                                            body_name)
+                if body_id < 0:
+                    continue
+                position = self.mjdata.xpos[body_id]
+                rotation = self.mjdata.xmat[body_id].reshape(3, 3)
+                yaw = math.atan2(rotation[1, 0], rotation[0, 0])
 
-            message = pose_pb2.PoseStamped()
-            message.header.stamp_sec = int(self.mjdata.time)
-            message.header.stamp_nsec = int((self.mjdata.time % 1.0) * 1e9)
-            message.header.frame_id = "world"
-            message.position_x = float(position[0])
-            message.position_y = float(position[1])
-            message.position_z = float(position[2])
-            message.orientation_w = math.cos(yaw / 2.0)
-            message.orientation_z = math.sin(yaw / 2.0)
-            self.zmq_publisher.publish("pose", message.SerializeToString())
+                message = pose_pb2.PoseStamped()
+                message.header.stamp_sec = int(self.mjdata.time)
+                message.header.stamp_nsec = int((self.mjdata.time % 1.0) * 1e9)
+                message.header.frame_id = "world"
+                message.position_x = float(position[0])
+                message.position_y = float(position[1])
+                message.position_z = float(position[2])
+                message.orientation_w = math.cos(yaw / 2.0)
+                message.orientation_z = math.sin(yaw / 2.0)
+                self.zmq_publisher.publish(topic, message.SerializeToString())
         except Exception:
             return
 

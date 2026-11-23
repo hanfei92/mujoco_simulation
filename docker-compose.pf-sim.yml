@@ -15,6 +15,7 @@ services:
       - ZMQ_LIDAR_ENDPOINT=tcp://mujoco-wrapper:5555
       - ZMQ_CMD_ENDPOINT=tcp://mujoco-wrapper:5556
       - PF_MANAGER=${PF_MANAGER:-1}
+      - PF_TRACKER=${PF_TRACKER:-real}
     volumes:
       - ../person_following_ws:/opt/person_following_ws:ro
     profiles: ["pf"]

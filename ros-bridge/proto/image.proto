@@ -8,7 +8,8 @@ message Header {
   string frame_id = 3;
 }
 
-// 对齐 sensor_msgs/Image
+// Aligned with sensor_msgs/Image, plus intrinsics and the camera pose so the
+// ROS bridge can publish Image, CameraInfo and TF from one message.
 message Image {
   Header header = 1;
   uint32 height = 2;
@@ -17,4 +18,19 @@ message Image {
   uint32 step = 5;
   bool is_bigendian = 6;
   bytes data = 7;
+
+  // Pinhole intrinsics (pixels)
+  double fx = 8;
+  double fy = 9;
+  double cx = 10;
+  double cy = 11;
+
+  // Camera pose in the world frame (optical convention: x right, y down, z forward)
+  double cam_x = 12;
+  double cam_y = 13;
+  double cam_z = 14;
+  double cam_qx = 15;
+  double cam_qy = 16;
+  double cam_qz = 17;
+  double cam_qw = 18;
 }
