@@ -32,7 +32,7 @@ COPY proto/ ./proto/
 RUN uv run python -m grpc_tools.protoc -I proto \
     --python_out=aidea_mujoco/aidea_mujoco/msg \
     proto/common.proto proto/lidar.proto proto/image.proto \
-    proto/imu.proto proto/joint_state.proto proto/pose.proto
+    proto/imu.proto proto/joint_state.proto proto/pose.proto proto/command.proto
 
 # 确保 msg 是包
 RUN touch aidea_mujoco/aidea_mujoco/msg/__init__.py

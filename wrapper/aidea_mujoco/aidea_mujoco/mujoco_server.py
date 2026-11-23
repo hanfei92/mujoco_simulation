@@ -455,7 +455,20 @@ class MujocoServer:
         self.zmq_publisher = ZmqPublisher(
             endpoint=os.environ.get("ZMQ_PUB_ENDPOINT", "tcp://*:5555")
         )
-        print(f"[mujoco_server] ZMQ PUB bound to {self.zmq_publisher._endpoint}")    
+        print(f"[mujoco_server] ZMQ PUB bound to {self.zmq_publisher._endpoint}")
+
+        # ---- person-following bridge: command channel (ROS /cmd_vel -> sim) ----
+        self.command_server = None
+        try:
+            from aidea_mujoco.command_server import CommandServer
+            self.command_server = CommandServer(
+                self.data_proxies,
+                endpoint=os.environ.get("ZMQ_CMD_ENDPOINT", "tcp://*:5556"),
+            )
+            print("[mujoco_server] ZMQ command PULL bound to "
+                  f"{self.command_server.endpoint}")
+        except Exception as exc:
+            print(f"[mujoco_server] command server disabled: {exc}")    
 
 
         # ---- 加载机器人插件 ----
@@ -601,7 +614,12 @@ class MujocoServer:
         if hasattr(self, "zmq_publisher") and self.zmq_publisher is not None:
             self.zmq_publisher.close()
             self.zmq_publisher = None
-            print("[mujoco_server] ZMQ PUB closed")        
+            print("[mujoco_server] ZMQ PUB closed")
+
+        if getattr(self, "command_server", None) is not None:
+            self.command_server.close()
+            self.command_server = None
+            print("[mujoco_server] ZMQ command closed")        
 
     def _run_ui_simulation(self, show_viewer_ui: bool) -> None:
         """
@@ -728,6 +746,41 @@ class MujocoServer:
         #         print(f"[MujocoServer] LiDAR trace failed: {e}", flush=True)
 
 
+    def _publish_pose(self) -> None:
+        """Publish the G1 pelvis pose for the person-following ROS bridge."""
+        try:
+            import math
+            import time
+
+            now = time.time()
+            if now - getattr(self, "_last_pose_publish", 0.0) < (1.0 / 30.0):
+                return
+            self._last_pose_publish = now
+
+            import mujoco
+            from aidea_mujoco.msg import pose_pb2
+
+            body_id = mujoco.mj_name2id(self.mjmodel, mujoco.mjtObj.mjOBJ_BODY,
+                                        "g1_pelvis")
+            if body_id < 0:
+                return
+            position = self.mjdata.xpos[body_id]
+            rotation = self.mjdata.xmat[body_id].reshape(3, 3)
+            yaw = math.atan2(rotation[1, 0], rotation[0, 0])
+
+            message = pose_pb2.PoseStamped()
+            message.header.stamp_sec = int(self.mjdata.time)
+            message.header.stamp_nsec = int((self.mjdata.time % 1.0) * 1e9)
+            message.header.frame_id = "world"
+            message.position_x = float(position[0])
+            message.position_y = float(position[1])
+            message.position_z = float(position[2])
+            message.orientation_w = math.cos(yaw / 2.0)
+            message.orientation_z = math.sin(yaw / 2.0)
+            self.zmq_publisher.publish("pose", message.SerializeToString())
+        except Exception:
+            return
+
     def pull_status(self):
         data = self.mjdata
         new_status = StatusAideaJoints.default()
@@ -787,6 +840,7 @@ class MujocoServer:
 
         new_status.is_self_colliding = False
 
+        self._publish_pose()
         self.data_proxies.set_status(new_status)
         self._last_wall_time = time.perf_counter()
         self._last_sim_time = data.time

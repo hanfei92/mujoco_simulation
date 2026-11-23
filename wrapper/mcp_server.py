@@ -175,6 +175,15 @@ def get_g1_state() -> dict:
     }
 
 
+@mcp.tool()
+def set_person_pose(x: float, y: float, yaw: float = 0.0) -> dict:
+    """把 mocap 人偶移动到 world 系 (x, y, yaw)，用于手工调试。"""
+    cmds = _data_proxies.get_robot_command()
+    cmds["person"] = {"x": x, "y": y, "yaw": yaw}
+    _data_proxies.set_robot_command(cmds)
+    return {"status": "ok", "x": x, "y": y, "yaw": yaw}
+
+
 # ---------------- 启动 ----------------
 
 def main():

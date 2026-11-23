@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package aidea.command;
+
+// ZMQ command channel for the person-following bridge.
+// The wrapper binds a PULL socket; the ROS bridge connects a PUSH socket.
+message Command {
+  string kind = 1;      // "robot" | "person"
+  string robot_id = 2;  // "g1"
+  double vx = 3;        // m/s
+  double vy = 4;        // m/s (unused by the G1 plugin)
+  double omega = 5;     // rad/s
+  string mode = 6;      // "" keeps the current mode; "walk"/"stand" switches
+  double x = 7;         // mocap person position, world frame
+  double y = 8;
+  double yaw = 9;
+}
