@@ -8,16 +8,16 @@ export PYTHONPATH=/app:${PYTHONPATH}
 roscore &
 sleep 3
 
-# world -> odom -> base_footprint -> base_link -> g_base
-rosrun tf2_ros static_transform_publisher 0 0 0 0 0 0 world odom &
-rosrun tf2_ros static_transform_publisher 0 0 0 0 0 0 base_footprint base_link &
-rosrun tf2_ros static_transform_publisher -0.028185 -0.0016001 0.4765 1.57079632679 0 0 base_link g_base &
+# The fixed frames (world->odom, base_footprint->base_link, base_link->g_base)
+# are re-broadcast on /tf by pose_tf.py: the tracker uses tf1, which does not
+# consume tf2's /tf_static, and three static publishers would collide on the
+# same generated node name anyway.
 
 python3 /app/pf_sim/pose_tf.py &
 python3 /app/pf_sim/camera_bridge.py &
 python3 /app/pf_sim/sim_world.py &
 python3 /app/pf_sim/cmd_vel_bridge.py &
-python3 /app/pf_sim/person_walker.py &
+python3 /app/pf_sim/person_walker.py _mode:=${PF_PERSON_MODE:-circle} &
 sleep 2
 python3 /app/pf_sim/gt_pose.py &
 python3 /app/pf_sim/target_bridge.py &
@@ -44,6 +44,7 @@ fi
     if [ -x /opt/pf_ws/devel/lib/monocular_people_tracking/monocular_people_tracking_node ]; then
         source /opt/pf_ws/devel/setup.bash
         rosrun monocular_people_tracking monocular_people_tracking_node \
+            camera_info:=/pf_cam/camera_info \
             _detection_confidence_thresh:=0.1 \
             _association_maha_sq_thresh:=9.0 \
             _tracking_remove_trace_thresh:=5.0 &

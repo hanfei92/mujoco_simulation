@@ -66,9 +66,50 @@ PF_TRACKER=fake docker compose -f docker-compose.yml -f docker-compose.pf-sim.ym
 | `/map`、两个 costmap、`/map_follow/localization_ready` | — | `sim_world.py` |
 | `/cmd_vel` | `geometry_msgs/Twist` | 管理器 → `cmd_vel_bridge.py` → 底盘 |
 
-## 验证记录（2026-11-23）
+## 验证记录
 
-在没有 GPU 的机器上用**合成 ZMQ 数据**跑通了两段（MuJoCo 本体需要 GPU/EGL，未在此机运行）：
+### 真实 MuJoCo 运行（GPU / EGL）
+
+在带 RTX 4060 的容器里跑通了真实 wrapper + 桥接 + 跟踪 + 管理器：
+
+| 环节 | 结果 |
+| --- | --- |
+| ZMQ（wrapper → pf-sim） | `image` 29.8 Hz、`pose` 29.0 Hz、`person_pose` 28.8 Hz、`lidar` 9.5 Hz |
+| `/pf_cam/image_raw` | 30.0 Hz（800×600） |
+| `/pose_estimator/pose` | 每帧 3 个部位（颈 + 双踝），颈归一化坐标 (0.50, 0.48) |
+| `/monocular_people_tracking/tracks` | `id=0 pos=(2.67, 0.00)`，真值 (2.5, 0) |
+| 管理器 | `/observe_manager/state` = `OBSERVING`，决策 `HOLD / good_enough`，`/cmd_vel` 20 Hz |
+
+复现要点（容器名要对上）：
+
+```bash
+docker network create sim-net
+docker run -d --name mujoco-wrapper --network sim-net --device nvidia.com/gpu=all \
+  -e MUJOCO_GL=egl -e PYOPENGL_PLATFORM=egl \
+  -e ROBOT_MJCF_INCLUDES=/app/aidea_mujoco/mjcf/robots/g1/g1_12dof.xml \
+  -e ROBOT_PLUGIN_CONFIGS=/app/aidea_mujoco/aidea_mujoco/plugins/g1/config.yaml \
+  mujoco_simulation-mujoco-wrapper:latest
+
+docker run -d --name pf-sim --network sim-net \
+  -e ZMQ_LIDAR_ENDPOINT=tcp://mujoco-wrapper:5555 \
+  -e ZMQ_CMD_ENDPOINT=tcp://mujoco-wrapper:5556 \
+  -e PF_MANAGER=1 -e PF_TRACKER=real -e PF_PERSON_MODE=still \
+  -v /home/amigo/project/RND/person_following_ws:/opt/person_following_ws:ro \
+  mujoco_simulation-pf-sim:latest
+
+# 把人放到相机正前方
+docker exec mujoco-wrapper bash /app/mcp_call.sh move_g1_to '{"x":2.5,"y":0.0,"yaw":3.14159}'
+```
+
+检查时要 **source 两个工作区**，否则 `rostopic` 加载不了 `tfpose_ros` 消息（这一步踩过）：
+
+```bash
+docker exec pf-sim bash -lc 'source /opt/ros/noetic/setup.bash; source /opt/pf_ws/devel/setup.bash; rostopic hz /monocular_people_tracking/tracks'
+```
+
+### 无 GPU 时的合成数据验证
+
+`dev_check_bridge.sh` / `dev_check_tracks.sh` 用合成 ZMQ 数据，不需要 MuJoCo：
 
 | 检查 | 结果 |
 | --- | --- |
