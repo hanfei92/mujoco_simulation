@@ -82,6 +82,29 @@ docker run -d --name pf-sim --network sim-net \
 scripts/wait_ready.sh --bridge
 ```
 
+## 丢了目标时小车怎么动
+
+行为是「**先开过去，到了再扫**」：
+
+1. 有最后已知位置、且距离 > `search_stop_distance`（默认 1.2 m）→ 朝那里开
+   （转向 + 前进），不再原地打转；
+2. 到位后原地扫视；12 s 未找到转 `REPOSITION`；
+3. `REPOSITION` 没有候选点时走同一套逻辑（`_approach_last_known`）：还远就继续靠近，
+   已在 1.2 m 内就重新起一轮扫视，**不会停死**。
+
+| 参数 | 默认 | 含义 |
+| --- | --- | --- |
+| `~observe_manager_search_translate` | true | 是否靠近（关闭则只扫视） |
+| `~observe_manager_search_move_speed` | 0.25 m/s | 靠近速度 |
+| `~observe_manager_reposition_speed` | 0.30 m/s | REPOSITION 靠近速度 |
+| `~observe_manager_search_stop_distance` | 1.2 m | 距目标多近停下扫视 |
+
+实测（人在 2.5 m 处被发现后藏走）：12 s 内前进 **1.47 m** 到达停止距离，随后原地扫视
+（位置不变、状态在 SEARCHING / REPOSITION 间切换）。修复前只有 0.02 m 的原地转动。
+
+> **重启 pf-sim 不会重置仿真**。小车若已被开进家具卡住（给速度也不走），
+> 要 `docker rm -f mujoco-wrapper` 换一份干净的仿真状态。
+
 ## 验收标准
 
 | 级别 | 判据 |
