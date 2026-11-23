@@ -113,6 +113,29 @@ docker exec mujoco-wrapper bash -lc 'cd /app && uv run python /app/tools/make_ma
 docker cp mujoco-wrapper:/tmp/pf_map.json tmp/pf_map.json
 ```
 
+## 6.5 覆盖度热力图
+
+G1 走路线时，统计「哪些位置相机看得到、哪些位置看不到」，输出成一张图。
+
+```bash
+# 起 pf-sim 时打开真值轨迹记录（热力图要靠它还原丢失时的位置）
+-e PF_PERSON_MODE=route -e PF_PERSON_TRACE=1
+
+# 走一两分钟后生成
+python3 scripts/coverage_heatmap.py tmp/sim_logs \
+    --map tmp/pf_map.json --trace tmp/sim_logs/person_trace.jsonl --out tmp/coverage.png
+```
+
+图例：**黑色 = 家具**，**深灰 = 没走到**，**红→绿 = 可见比例 0→100%**，
+**蓝点 = 小车位置**，底部是色阶条。
+
+判读要点：红块是视场死角/被家具挡住；绿块是能稳定 `OBSERVING` 的位置。
+实测一次路线（约 2 分钟）：可见比例 33%，40 个采样格里 23 格是盲区——
+因为小车停在原点，而路线把人带到了 5 m 以外和家具背后。
+
+> 丢失时管理器没有可信的目标位置（`target` 会过期或外推），所以热力图必须用
+> `--trace` 的真值轨迹按时间戳配对，否则丢样会被过滤掉、结果虚高。
+
 ## 7. 录包与回灌
 
 ```bash

@@ -29,6 +29,12 @@ sleep 2
 python3 /app/pf_sim/gt_pose.py &
 python3 /app/pf_sim/target_bridge.py &
 
+if [ "${PF_PERSON_TRACE:-0}" = "1" ]; then
+    # ground-truth person trace, used by scripts/coverage_heatmap.py
+    python3 /app/pf_sim/dev_person_trace.py \
+        _out:=${PF_LOG_DIR:-/tmp/person_follow_observe}/person_trace.jsonl &
+fi
+
 if [ "${PF_CAMERA_VIEW:-0}" = "1" ]; then
     python3 /app/pf_sim/camera_view.py _port:=${PF_CAMERA_PORT:-8090} &
 fi
