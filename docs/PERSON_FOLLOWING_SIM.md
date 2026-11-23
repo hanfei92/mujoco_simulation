@@ -84,6 +84,59 @@ scripts/wait_ready.sh
 docker exec mujoco-wrapper bash /app/mcp_call.sh move_g1_to '{"x":1.9,"y":-0.64,"yaw":0}'
 ```
 
+## 相机画面（网页）
+
+```bash
+# 起 pf-sim 时加：-p 8090:8090 -e PF_CAMERA_VIEW=1
+# 然后浏览器打开 http://127.0.0.1:8090/
+```
+
+画面就是机器人前视相机（`/pf_cam/image_raw`），叠了三类信息：
+
+- 绿点 / 黄点：GT 投影出的颈、双踝（跟踪算法的输入）
+- 左上角：`tracks N | 管理器状态 | cmd(v,w)`
+
+没起容器也能验证流是否正常：
+
+```bash
+docker exec pf-sim python3 -c "import urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8090/stream', timeout=5); print(len(r.read(4000)))"
+```
+
+## G1 覆盖路线
+
+G1 按房间布局走一条带安全间距的往返扫描路线，路线从 MuJoCo 场景的**射线扫描**得来
+（相当于一张只含静态家具的 SLAM 地图）。
+
+```bash
+# 1) 从场景生成占位图（在 wrapper 容器里跑，含家具，不含小车和 G1）
+docker cp tools/make_map_from_mjcf.py mujoco-wrapper:/app/tools/make_map_from_mjcf.py
+docker exec mujoco-wrapper bash -lc 'cd /app && uv run python /app/tools/make_map_from_mjcf.py --out /tmp/pf_map.json'
+docker cp mujoco-wrapper:/tmp/pf_map.json tmp/pf_map.json
+
+# 2) 让 G1 按路线走
+docker run ... -e PF_PERSON_MODE=route -e PF_MAP_FILE=/tmp/pf_map.json \
+  -v $PWD/tmp/pf_map.json:/tmp/pf_map.json:ro ...
+
+# 3) 看路线（29 个航点 / 60 m）
+rostopic echo -n1 /person_route/path
+```
+
+参数（都在 `person_route.py` 的私有参数里）：
+
+| 参数 | 默认 | 含义 |
+| --- | --- | --- |
+| `~lane_spacing` | 1.2 m | 扫描行间距，越小覆盖越密、路越长 |
+| `~clearance` | 0.55 m | 离家具的最小安全距离（用地形腐蚀实现） |
+| `~area_margin` | 1.5 m | 扫描范围 = 家具包围盒 + 该外扩 |
+| `~max_vx` | 0.45 m/s | 行走速度 |
+| `~loop` | true | 走完是否循环 |
+
+生成的地图：200×200 @0.1 m，家具占 517 格（约 5 m²），路线 33 个航点、60.6 m。
+实测 20 s 轨迹到家具的**最小距离 0.77 m**（设计值 0.55 m，实际更保守）。
+
+> G1 是运动学模型（直接积分位置），**不参与物理碰撞**。所以"不撞"是靠地图安全间距 +
+> 航点间的视线连通（LOS）来保证的。要真碰撞，需要给 G1 加碰撞体并改用动力学。
+
 ## 测试指标与可视化
 
 运行数据有三层，从粗到细：

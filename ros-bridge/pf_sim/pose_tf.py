@@ -7,7 +7,7 @@ import rospy
 import tf2_ros
 import zmq
 from geometry_msgs.msg import TransformStamped
-from geometry_msgs.msg import Point, PointStamped
+from geometry_msgs.msg import Point, PointStamped, PoseStamped
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
 
@@ -24,6 +24,8 @@ def main():
     broadcaster = tf2_ros.TransformBroadcaster()
     odom_pub = rospy.Publisher('/odom', Odometry, queue_size=5)
     person_pub = rospy.Publisher('/person_pose', PointStamped, queue_size=1)
+    person_full_pub = rospy.Publisher('/person_pose_stamped', PoseStamped,
+                                      queue_size=1)
 
     context = zmq.Context()
     sub = context.socket(zmq.SUB)
@@ -51,10 +53,22 @@ def main():
         except Exception:
             continue
         if envelope.topic == 'person_pose':
+            stamp = rospy.Time.now()
             person_pub.publish(PointStamped(
-                header=Header(frame_id=parent, stamp=rospy.Time.now()),
+                header=Header(frame_id=parent, stamp=stamp),
                 point=Point(x=pose.position_x, y=pose.position_y,
                             z=pose.position_z)))
+            # The route driver needs the heading; PointStamped does not carry it.
+            full = PoseStamped()
+            full.header = Header(frame_id=parent, stamp=stamp)
+            full.pose.position.x = pose.position_x
+            full.pose.position.y = pose.position_y
+            full.pose.position.z = pose.position_z
+            full.pose.orientation.x = pose.orientation_x
+            full.pose.orientation.y = pose.orientation_y
+            full.pose.orientation.z = pose.orientation_z
+            full.pose.orientation.w = pose.orientation_w
+            person_full_pub.publish(full)
             continue
 
         stamp = rospy.Time.now()

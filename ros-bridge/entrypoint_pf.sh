@@ -17,11 +17,21 @@ python3 /app/pf_sim/pose_tf.py &
 python3 /app/pf_sim/camera_bridge.py &
 python3 /app/pf_sim/sim_world.py &
 python3 /app/pf_sim/cmd_vel_bridge.py &
-python3 /app/pf_sim/person_walker.py _mode:=${PF_PERSON_MODE:-circle} \
-    _vx:=${PF_PERSON_VX:-0.4} _wz:=${PF_PERSON_WZ:-0.25} &
+if [ "${PF_PERSON_MODE:-circle}" = "route" ]; then
+    python3 /app/pf_sim/person_route.py \
+        _map_file:=${PF_MAP_FILE:-/tmp/pf_map.json} \
+        _lane_spacing:=${PF_ROUTE_LANE:-1.2} &
+else
+    python3 /app/pf_sim/person_walker.py _mode:=${PF_PERSON_MODE:-circle} \
+        _vx:=${PF_PERSON_VX:-0.4} _wz:=${PF_PERSON_WZ:-0.25} &
+fi
 sleep 2
 python3 /app/pf_sim/gt_pose.py &
 python3 /app/pf_sim/target_bridge.py &
+
+if [ "${PF_CAMERA_VIEW:-0}" = "1" ]; then
+    python3 /app/pf_sim/camera_view.py _port:=${PF_CAMERA_PORT:-8090} &
+fi
 
 # Optional: build and run the real tracking algorithm from the mounted source.
 if [ "${PF_TRACKER:-fake}" = "real" ]; then
