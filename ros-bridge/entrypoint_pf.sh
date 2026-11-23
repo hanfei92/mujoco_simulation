@@ -17,12 +17,12 @@ python3 /app/pf_sim/pose_tf.py &
 python3 /app/pf_sim/camera_bridge.py &
 python3 /app/pf_sim/sim_world.py &
 python3 /app/pf_sim/cmd_vel_bridge.py &
-if [ "${PF_PERSON_MODE:-circle}" = "route" ]; then
+if [ "${PF_PERSON_MODE:-route}" = "route" ]; then
     python3 /app/pf_sim/person_route.py \
         _map_file:=${PF_MAP_FILE:-/tmp/pf_map.json} \
         _lane_spacing:=${PF_ROUTE_LANE:-1.2} &
 else
-    python3 /app/pf_sim/person_walker.py _mode:=${PF_PERSON_MODE:-circle} \
+    python3 /app/pf_sim/person_walker.py _mode:=${PF_PERSON_MODE:-route} \
         _vx:=${PF_PERSON_VX:-0.4} _wz:=${PF_PERSON_WZ:-0.25} &
 fi
 sleep 2

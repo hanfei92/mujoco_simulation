@@ -17,7 +17,7 @@ services:
       - PF_MANAGER=${PF_MANAGER:-1}
       - PF_TRACKER=${PF_TRACKER:-real}
       - PF_CAMERA_VIEW=${PF_CAMERA_VIEW:-1}
-      - PF_PERSON_MODE=${PF_PERSON_MODE:-still}
+      - PF_PERSON_MODE=${PF_PERSON_MODE:-route}
       - PF_MAP_FILE=${PF_MAP_FILE:-/tmp/pf_map.json}
     volumes:
       - ../person_following_ws:/opt/person_following_ws:ro
