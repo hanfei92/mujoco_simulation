@@ -24,6 +24,8 @@ class StatusAideaCameras:
 
     cam_hemilidar_airy: np.ndarray|None = None
 
+    cam_pf_overview: np.ndarray|None = None
+
 
     def get_all(self, *, auto_rotate: bool = True, auto_correct_rgb=True, use_depth_color_map=False)-> dict[AideaCameras, np.ndarray]:
         """Returns the camera `{Cameras: pixels}` that are available (not None).
@@ -70,6 +72,11 @@ class StatusAideaCameras:
             rotate_num = camera.initial_camera_settings.rotate_number_of_times
             data = np.rot90(data, rotate_num) if auto_rotate and rotate_num != 0 else data
             data = get_depth_color_map(data) if use_depth_color_map else data
+        elif camera == AideaCameras.cam_pf_overview and self.cam_pf_overview is not None:
+            data = self.cam_pf_overview
+            rotate_num = camera.initial_camera_settings.rotate_number_of_times
+            data = np.rot90(data, rotate_num) if auto_rotate and rotate_num != 0 else data
+            data = cv2.cvtColor(data, cv2.COLOR_RGB2BGR) if auto_correct_rgb else data
         elif camera == AideaCameras.cam_nav_rgb and self.cam_nav_rgb is not None:
             data = self.cam_nav_rgb
             rotate_num = camera.initial_camera_settings.rotate_number_of_times
@@ -98,6 +105,9 @@ class StatusAideaCameras:
             return
         if camera == AideaCameras.cam_hemilidar_airy:
             self.cam_hemilidar_airy = data
+            return
+        if camera == AideaCameras.cam_pf_overview:
+            self.cam_pf_overview = data
             return
 
         raise NotImplementedError(f"Camera {camera} is not implemented.")

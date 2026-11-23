@@ -42,7 +42,8 @@ def _start_sim():
         target=server_class.launch_server,
         args=(
             None, None, 30.0, True,
-            _stop_event, _data_proxies, [AideaCameras.cam_nav_rgb],
+            _stop_event, _data_proxies,
+            [AideaCameras.cam_nav_rgb, AideaCameras.cam_pf_overview],
             None, None,
         ),
         daemon=False,

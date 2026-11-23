@@ -71,6 +71,9 @@ docker run -d --name pf-sim --network sim-net \
     -v "$PFWS:/opt/person_following_ws:ro" \
     -v "$PWD/$SIM_LOGS:/tmp/person_follow_observe" \
     -v "$PWD/$MAP_FILE:/tmp/pf_map.json:ro" \
+    -v "$PWD/tmp:/opt/pf_tmp" \
+    -v "$PWD/scripts:/opt/pf_scripts:ro" \
+    -v /var/run/docker.sock:/var/run/docker.sock \
     mujoco_simulation-pf-sim:latest >/dev/null
 
 say "5/6 waiting for the tracker"

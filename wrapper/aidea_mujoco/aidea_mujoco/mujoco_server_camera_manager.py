@@ -134,8 +134,13 @@ class MujocoServerCameraManagerSync:
             from aidea_mujoco.msg import image_pb2
             from aidea_mujoco import utils
 
-            if camera != AideaCameras.cam_nav_rgb or render is None:
+            if render is None or camera not in (
+                    AideaCameras.cam_nav_rgb,
+                    AideaCameras.cam_pf_overview):
                 return
+            topic = ('image'
+                     if camera == AideaCameras.cam_nav_rgb
+                     else 'overview')
             model = self.mujoco_server.mjmodel
             data = self.mujoco_server.mjdata
             camera_id = mujoco.mj_name2id(
@@ -157,7 +162,8 @@ class MujocoServerCameraManagerSync:
             message = image_pb2.Image()
             message.header.stamp_sec = int(data.time)
             message.header.stamp_nsec = int((data.time % 1.0) * 1e9)
-            message.header.frame_id = "pf_cam_optical"
+            message.header.frame_id = (
+                "pf_cam_optical" if topic == "image" else "world")
             message.height = height
             message.width = width
             message.encoding = "rgb8"
@@ -177,7 +183,7 @@ class MujocoServerCameraManagerSync:
             message.cam_qz = qz
             message.cam_qw = qw
             self.mujoco_server.zmq_publisher.publish(
-                "image", message.SerializeToString())
+                topic, message.SerializeToString())
         except Exception as exc:
             print(f"[camera] image publish failed: {exc}")
 

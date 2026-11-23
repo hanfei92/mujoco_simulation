@@ -35,6 +35,9 @@ class AideaCameras(Enum):
     cam_hemilidar_airy = 6
     """Airy hemispherical lidar."""
 
+    cam_pf_overview = 7
+    """Fixed overhead camera used by the person-following dashboard."""
+
 
     def get_render_params(self):
         return (self.camera_name_in_mjcf, self.name, self.post_processing_callback)
@@ -61,6 +64,7 @@ class AideaCameras(Enum):
         return [
             AideaCameras.cam_d435i_rgb,
             AideaCameras.cam_nav_rgb,
+            AideaCameras.cam_pf_overview,
         ]
 
     @staticmethod
@@ -81,6 +85,8 @@ class AideaCameras(Enum):
             return "fisheye"
         if self == AideaCameras.cam_hemilidar_airy:
             return "airy_lidar"
+        if self == AideaCameras.cam_pf_overview:
+            return "pf_overview"
         raise NotImplementedError(f"Camera {self} camera_name_in_mjcf is not implemented")
 
     @property
@@ -192,6 +198,15 @@ class AideaCameras(Enum):
                 height=600,  # from webteleop
                 sensor_resolution=(1280, 720),  # from ov9782 spec
                 # sensor_pixel_size_micrometers=3.0 # from ov9782 spec, note: enabling this will not work with 0 `focal`
+                rotate_number_of_times=0,
+            )
+
+        if self == AideaCameras.cam_pf_overview:
+            return CameraSettings(
+                field_of_view_vertical_in_degrees=50.0,
+                focal=(0.0, 0.0),
+                width=960,
+                height=540,
                 rotate_number_of_times=0,
             )
 

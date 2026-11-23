@@ -35,7 +35,12 @@ if [ "${PF_PERSON_TRACE:-0}" = "1" ]; then
         _out:=${PF_LOG_DIR:-/tmp/person_follow_observe}/person_trace.jsonl &
 fi
 
-if [ "${PF_CAMERA_VIEW:-0}" = "1" ]; then
+if [ "${PF_DASHBOARD:-1}" = "1" ]; then
+    python3 /app/pf_sim/dashboard.py \
+        _port:=${PF_CAMERA_PORT:-8090} \
+        _sessions_dir:=${PF_SESSIONS_DIR:-/opt/pf_tmp/sim_sessions} \
+        _scripts_dir:=${PF_SCRIPTS_DIR:-/opt/pf_scripts} &
+elif [ "${PF_CAMERA_VIEW:-0}" = "1" ]; then
     python3 /app/pf_sim/camera_view.py _port:=${PF_CAMERA_PORT:-8090} &
 fi
 

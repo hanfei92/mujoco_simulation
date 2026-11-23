@@ -15,11 +15,13 @@ def main():
     rospy.init_node('pf_sim_camera')
     endpoint = rospy.get_param('~zmq_endpoint', 'tcp://mujoco-wrapper:5555')
     image_topic = rospy.get_param('~image_topic', '/pf_cam/image_raw')
+    overview_topic = rospy.get_param('~overview_topic', '/pf_cam/overview')
     info_topic = rospy.get_param('~info_topic', '/pf_cam/camera_info')
     frame = rospy.get_param('~frame', 'pf_cam_optical')
     parent = rospy.get_param('~parent_frame', 'world')
 
     image_pub = rospy.Publisher(image_topic, Image, queue_size=1)
+    overview_pub = rospy.Publisher(overview_topic, Image, queue_size=1)
     info_pub = rospy.Publisher(info_topic, CameraInfo, queue_size=1, latch=True)
     broadcaster = tf2_ros.TransformBroadcaster()
 
@@ -41,7 +43,7 @@ def main():
             envelope.ParseFromString(raw)
         except Exception:
             continue
-        if envelope.topic != 'image':
+        if envelope.topic not in ('image', 'overview'):
             continue
         pb = image_pb2.Image()
         try:
@@ -59,6 +61,9 @@ def main():
         image.step = pb.step or (pb.width * 3)
         image.is_bigendian = pb.is_bigendian
         image.data = pb.data
+        if envelope.topic == 'overview':
+            overview_pub.publish(image)
+            continue
         image_pub.publish(image)
 
         info = CameraInfo()

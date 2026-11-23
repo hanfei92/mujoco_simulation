@@ -50,6 +50,8 @@
   </asset>
 
   <worldbody>
+    <!-- person-following dashboard: third-person overview of the whole room -->
+    <camera name="pf_overview" pos="0 0 7" xyaxes="1 0 0 0 1 0" fovy="50"/>
     <!-- ========== 光照 ========== -->
     <light pos="0 0 2.8" dir="0 0 -1" directional="true"
            diffuse="0.8 0.8 0.8" specular="0.2 0.2 0.2"
