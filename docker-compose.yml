@@ -6,6 +6,9 @@ services:
     container_name: mujoco-wrapper
     networks:
       - sim-net
+    ports:
+      - "5555:5555"
+      - "8081:8081"
     deploy:
       resources:
         reservations:
@@ -19,6 +22,14 @@ services:
     #   timeout: 5s
     #   retries: 5
     #   start_period: 30s
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - ROBOT_MJCF_INCLUDES=/app/aidea_mujoco/mjcf/robots/g1/g1_12dof.xml
+      - ROBOT_PLUGIN_CONFIGS=/app/aidea_mujoco/aidea_mujoco/plugins/g1/config.yaml
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:rw
 
   ros-bridge:
     profiles: ["ros"]

@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Aidea MuJoCo simulation"
 requires-python = ">=3.10"
 dependencies = [
+    "torch",
     "click",
     "mujoco",
     "mujoco-lidar[warp]",
@@ -27,3 +28,11 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["aidea_mujoco"]
 include = ["aidea_mujoco*"]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }

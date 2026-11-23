@@ -12,12 +12,6 @@ RUN apt-get update && apt-get install -y curl gnupg2 lsb-release \
     && apt-get update && apt-get install -y ros-noetic-ros-base \
     && rm -rf /var/lib/apt/lists/*
 
-# ---------- ROS2 Humble + ros1_bridge ----------
-# RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
-#     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu focal main" > /etc/apt/sources.list.d/ros2.list \
-#     && apt-get update && apt-get install -y ros-humble-ros-base ros-humble-ros1-bridge \
-#     && rm -rf /var/lib/apt/lists/*
-
 # ---------- Python 依赖（ZMQ + Protobuf） ----------
 RUN apt-get update && apt-get install -y python3-pip \
     && pip3 install pyzmq protobuf \

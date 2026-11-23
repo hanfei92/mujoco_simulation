@@ -427,7 +427,8 @@ class MujocoServer:
                 # scene_spec.attach(robot_spec, site=mount_site, prefix="g1_")
 
                 # 直接 attach，用 prefix 参数加前缀
-                frame = scene_spec.worldbody.add_frame(pos=[0, 0, 0.793])
+                # TODO 改成配置文件读取
+                frame = scene_spec.worldbody.add_frame(pos=[0.5, 0.5, 0.])
                 scene_spec.attach(robot_spec, frame=frame, prefix=f"{robot_id}_")
             model = scene_spec.compile()
 
