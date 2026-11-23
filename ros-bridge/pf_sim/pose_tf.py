@@ -72,6 +72,26 @@ def main():
             transform.transform.rotation.z = pose.orientation_z
         broadcaster.sendTransform(transform)
 
+        # The tracking node uses tf1, which does not consume tf2's /tf_static,
+        # so the fixed frames are re-broadcast on /tf every cycle.
+        for parent_frame, child_frame, xyz in (
+                ('world', 'odom', (0.0, 0.0, 0.0)),
+                ('base_footprint', 'base_link', (0.0, 0.0, 0.0)),
+                ('base_link', 'g_base', (-0.028185, -0.0016001, 0.4765))):
+            fixed = TransformStamped()
+            fixed.header.stamp = stamp
+            fixed.header.frame_id = parent_frame
+            fixed.child_frame_id = child_frame
+            fixed.transform.translation.x = xyz[0]
+            fixed.transform.translation.y = xyz[1]
+            fixed.transform.translation.z = xyz[2]
+            if child_frame == 'g_base':
+                fixed.transform.rotation.z = 0.7071067811865476
+                fixed.transform.rotation.w = 0.7071067811865476
+            else:
+                fixed.transform.rotation.w = 1.0
+            broadcaster.sendTransform(fixed)
+
         odom = Odometry()
         odom.header = transform.header
         odom.child_frame_id = child

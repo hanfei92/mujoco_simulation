@@ -3,7 +3,7 @@ FROM ros:noetic-ros-base
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential cmake python3-pip python3-numpy python3-zmq \
+    build-essential cmake git python3-pip python3-numpy python3-zmq \
     ros-noetic-message-generation ros-noetic-tf2-ros ros-noetic-nav-msgs \
     ros-noetic-sensor-msgs ros-noetic-visualization-msgs \
     ros-noetic-geometry-msgs ros-noetic-tf ros-noetic-tf-conversions \

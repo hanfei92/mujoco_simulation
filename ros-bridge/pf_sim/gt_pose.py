@@ -8,8 +8,9 @@ detector later; the tracker only consumes ``/pose_estimator/pose``.
 
 import math
 
+import numpy as np
 import rospy
-import tf
+import tf2_ros
 from geometry_msgs.msg import PointStamped
 from sensor_msgs.msg import CameraInfo
 from std_msgs.msg import Header
@@ -24,7 +25,8 @@ class GroundTruthPose(object):
     def __init__(self):
         self.frame = rospy.get_param('~frame', 'pf_cam_optical')
         self.rate = rospy.get_param('~rate', 15.0)
-        self.listener = tf.TransformListener()
+        self.buffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.buffer)
         self.info = None
         self.person = None
         rospy.Subscriber('/pf_cam/camera_info', CameraInfo, self.info_cb,
@@ -41,20 +43,28 @@ class GroundTruthPose(object):
     def person_cb(self, message):
         self.person = message
 
+    @staticmethod
+    def _quaternion_matrix(x, y, z, w):
+        return np.array([
+            [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+            [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+            [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
+        ])
+
     def _project(self, point_world, fx, fy, cx, cy, width, height):
         try:
-            transform, _ = self.listener.lookupTransform(
-                self.frame, 'world', rospy.Time(0))
-        except (tf.LookupException, tf.ConnectivityException,
-                tf.ExtrapolationException):
+            transform = self.buffer.lookup_transform(
+                self.frame, 'world', rospy.Time(0), rospy.Duration(0.1))
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException,
+                tf2_ros.ExtrapolationException):
             return None
-        px, py, pz = transform[0]
-        (qx, qy, qz, qw) = transform[1]
-        import numpy as np
-        rotation = np.array(tf.transformations.quaternion_matrix(
-            [qx, qy, qz, qw]))[:3, :3]
+        translation = transform.transform.translation
+        rotation = self._quaternion_matrix(
+            transform.transform.rotation.x, transform.transform.rotation.y,
+            transform.transform.rotation.z, transform.transform.rotation.w)
         point = np.array([point_world.x, point_world.y, point_world.z])
-        camera = rotation @ point + np.array([px, py, pz])
+        camera = rotation @ point + np.array(
+            [translation.x, translation.y, translation.z])
         if camera[2] <= 0.1:
             return None
         u = fx * camera[0] / camera[2] + cx
@@ -77,9 +87,9 @@ class GroundTruthPose(object):
         z = self.person.point.z
 
         def at(dz):
-            return PointStamped(header=self.person.header,
-                                point=type(self.person.point)(
-                                    x=x, y=y, z=z + dz))
+            # Return a bare Point: _project takes world coordinates, not a
+            # stamped message.
+            return type(self.person.point)(x=x, y=y, z=z + dz)
 
         neck = self._project(at(NECK_Z), fx, fy, cx, cy, width, height)
         if neck is None:

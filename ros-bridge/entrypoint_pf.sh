@@ -27,6 +27,17 @@ if [ "${PF_TRACKER:-fake}" = "real" ]; then
     if [ ! -x /opt/pf_ws/devel/lib/monocular_people_tracking/monocular_people_tracking_node ]; then
         echo "[pf-sim] building monocular_people_tracking"
         cp -r /opt/person_following_ws/src/monocular_people_tracking /opt/pf_ws/src/
+CPPOPT_DIR=/opt/pf_ws/src/monocular_people_tracking/3rdparty/CppNumericalSolvers
+if [ ! -f "$CPPOPT_DIR/include/cppoptlib/problem.h" ]; then
+    echo "[build] fetching cppoptlib headers"
+    rm -rf "$CPPOPT_DIR"
+    # master (v2) dropped cppoptlib/problem.h; the tracker uses the v1 API.
+    git clone "${CPPOPT_URL:-https://github.com/PatWie/CppNumericalSolvers.git}" \
+        "$CPPOPT_DIR" >/tmp/cppopt.log 2>&1 \
+        && git -C "$CPPOPT_DIR" checkout -q "${CPPOPT_SHA:-2a0f98e7c54c35325641e05c035e43cafd570808}" >>/tmp/cppopt.log 2>&1 \
+        || { echo "  FAIL  cppoptlib clone" >&2; tail -5 /tmp/cppopt.log >&2; exit 1; }
+fi
+
         ( cd /opt/pf_ws && catkin_make -DPYTHON_EXECUTABLE=/usr/bin/python3 ) \
             || echo "[pf-sim] tracker build failed"
     fi

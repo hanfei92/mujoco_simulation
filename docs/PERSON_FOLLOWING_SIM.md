@@ -66,6 +66,45 @@ PF_TRACKER=fake docker compose -f docker-compose.yml -f docker-compose.pf-sim.ym
 | `/map`、两个 costmap、`/map_follow/localization_ready` | — | `sim_world.py` |
 | `/cmd_vel` | `geometry_msgs/Twist` | 管理器 → `cmd_vel_bridge.py` → 底盘 |
 
+## 验证记录（2026-11-23）
+
+在没有 GPU 的机器上用**合成 ZMQ 数据**跑通了两段（MuJoCo 本体需要 GPU/EGL，未在此机运行）：
+
+| 检查 | 结果 |
+| --- | --- |
+| `dev_check_bridge.sh`：图像、CameraInfo、`/tf`、`/odom`、`/person_pose`、地图与代价地图、GT 位姿 | **17/17 通过** |
+| `dev_check_tracks.sh`：编译并运行 `monocular_people_tracking` | **通过**，输出 `track id=0 pos=(2.17, -0.62)`（真值 2.0, ±0.6） |
+
+复现：
+
+```bash
+# 桥接半段（不需要编译 C++）
+docker run --rm --entrypoint bash \
+  -v $PWD/ros-bridge/pf_sim:/app/pf_sim:ro \
+  -v $PWD/ros-bridge/proto:/app/proto:ro \
+  pf-sim-tracker:latest -lc 'bash /app/pf_sim/dev_check_bridge.sh'
+
+# 追踪半段（首次会编译跟踪节点）
+docker run --rm --entrypoint bash \
+  -v $PWD/ros-bridge/pf_sim:/app/pf_sim:ro \
+  -v /home/amigo/project/RND/person_following_ws:/opt/person_following_ws:ro \
+  pf-sim-tracker:built -lc 'bash /app/pf_sim/dev_check_tracks.sh'
+```
+
+### 过程中踩到的坑（已修）
+
+1. **`cppoptlib` 版本**：`3rdparty/CppNumericalSolvers` 在本地是空目录，上游 master 已删掉
+   `cppoptlib/problem.h`。构建脚本现在克隆仓库并 checkout 到 `2a0f98e`（v1 API 的最后一个提交）。
+2. **tf1 看不到 `/tf_static`**：跟踪节点用 `tf::TransformListener`，读不到 tf2 的静态发布器。
+   `pose_tf.py` 现在每帧把 `world→odom`、`base_footprint→base_link`、`base_link→g_base`
+   重新广播到 `/tf`。
+3. **跟踪器只接受带脚踝的观测来新建轨迹**（`people_tracker.cpp`）：合成数据里脚踝若被画面
+   裁掉，就永远没有 tracks。真实场景同理——**相机必须能拍到人的脚**，否则不会有新轨迹。
+   真机的 `fisheye` 相机是水平 1.2 m，2 m 外人脚接近画面下边缘，建议在 mjcf 里给它加
+   ~10° 俯角。
+4. **真实 wrapper 之前根本没开相机**：`mcp_server._start_sim` 传的 `cameras_to_use=[]`，
+   现在改为 `[AideaCameras.cam_nav_rgb]`。
+
 ## 限制
 
 - **未实跑验证**：本机没有 GPU/GUI，只做了语法与 compose 校验。首次务必

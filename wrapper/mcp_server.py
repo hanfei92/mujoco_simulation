@@ -7,6 +7,7 @@ from multiprocessing import Manager, Process
 from mcp.server import MCPServer
 
 from aidea_mujoco.mujoco_server import MujocoServer, MujocoServerProxies
+from aidea_mujoco.enums.aidea_cameras import AideaCameras
 from aidea_mujoco.datamodels.status_command import (
     CommandBaseVelocity,
     CommandMove,
@@ -32,7 +33,8 @@ def _start_sim():
         target=MujocoServer.launch_server,
         args=(
             None, None, 30.0, True,
-            _stop_event, _data_proxies, [], None, None,
+            _stop_event, _data_proxies, [AideaCameras.cam_nav_rgb],
+            None, None,
         ),
         daemon=False,
     )
