@@ -55,6 +55,9 @@ PAGE = b"""<!doctype html>
   <div class="card"><h3>ROBOT CAMERA</h3><img class="sensor" src="/stream/camera"></div>
   <div class="card"><h3>LIDAR 3D (drag to orbit, wheel to zoom)</h3><img id="lidar" class="sensor" src="/stream/lidar"></div>
   <div class="card" id="status"><h3>STATUS</h3><div>loading...</div></div>
+  <div class="card"><h3>TIMELINE (candidates / FOV / decisions)</h3>
+    <iframe id="timeline" style="width:100%;height:260px;border:0;border-radius:4px;background:#0d0f12"></iframe>
+  </div>
   <div class="card"><h3>VALIDATION</h3>
     <select id="session"></select>
     <div style="margin-top:6px"><button onclick="loadSession()">load</button>
@@ -110,6 +113,8 @@ function orbit(id, url){
 }
 orbit('overview','/api/view');
 orbit('lidar','/api/lidar_view');
+document.getElementById('timeline').src =
+  'http://' + location.hostname + ':8781/?file=observe-latest.jsonl';
 poll(); setInterval(poll, 1000); sessions();
 </script></body></html>"""
 

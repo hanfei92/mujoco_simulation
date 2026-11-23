@@ -67,7 +67,7 @@ docker run -d --name pf-sim --network sim-net \
     -e PF_CAMERA_VIEW="${PF_CAMERA_VIEW:-1}" \
     -e PF_MAP_FILE=/tmp/pf_map.json \
     -e PF_LOG_DIR=/tmp/person_follow_observe \
-    -p 8090:8090 \
+    -p 8090:8090 -p 8781:8781 \
     -v "$PFWS:/opt/person_following_ws:ro" \
     -v "$PWD/$SIM_LOGS:/tmp/person_follow_observe" \
     -v "$PWD/$MAP_FILE:/tmp/pf_map.json:ro" \

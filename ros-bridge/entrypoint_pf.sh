@@ -41,6 +41,11 @@ if [ "${PF_DASHBOARD:-1}" = "1" ]; then
         _port:=${PF_CAMERA_PORT:-8090} \
         _sessions_dir:=${PF_SESSIONS_DIR:-/opt/pf_tmp/sim_sessions} \
         _scripts_dir:=${PF_SCRIPTS_DIR:-/opt/pf_scripts} &
+    if [ "${PF_TIMELINE:-1}" = "1" ]; then
+        python3 /opt/person_following_ws/tools/ros_smoke/web_view.py \
+            --dir "${PF_LOG_DIR:-/tmp/person_follow_observe}" \
+            --host 0.0.0.0 --port "${PF_TIMELINE_PORT:-8781}" >/tmp/timeline.log 2>&1 &
+    fi
 elif [ "${PF_CAMERA_VIEW:-0}" = "1" ]; then
     python3 /app/pf_sim/camera_view.py _port:=${PF_CAMERA_PORT:-8090} &
 fi
