@@ -146,6 +146,21 @@ docker run --rm --entrypoint bash \
 4. **真实 wrapper 之前根本没开相机**：`mcp_server._start_sim` 传的 `cameras_to_use=[]`，
    现在改为 `[AideaCameras.cam_nav_rgb]`。
 
+## 闭环运动的已知问题（未完成）
+
+管理器能正确决策并调用发布，但**底盘没动**，本轮没跑通闭环：
+
+- 管理器日志：`search dir=1.0 angular=0.45 published=True`（`publish_guarded` 返回成功）
+- 同时 `/cmd_vel` 采样 113 帧全部 `angular.z = 0`
+- 对照实验：停掉管理器（`PF_MANAGER=0`）后，用 MCP `set_base_velocity(0.5, 0.5)`，
+  底盘 3 秒走了约 1 m —— **仿真底盘和 ZMQ 命令通路都是好的**
+- 模型对照：直接给四个轮子 `ctrl=20` 跑 3000 步，位移 3.72 m —— 模型动力学也正常
+
+所以问题在管理器→`/cmd_vel` 这一段：要么走了 `publish_guarded` 的 fallback 分支
+（发布 0 但返回 True），要么 `publish_raw` 之后被别的路径覆盖。下一步该在
+`publish_guarded` 里区分「candidate 被拒」和「fallback 成功」，以及确认
+`/cmd_vel` 上没有第二个发布者。
+
 ## 限制
 
 - **未实跑验证**：本机没有 GPU/GUI，只做了语法与 compose 校验。首次务必
