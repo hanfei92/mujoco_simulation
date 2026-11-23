@@ -303,6 +303,31 @@ docker run --rm --entrypoint bash \
   `trajectory_is_safe` 的拒绝原因、`publish_raw` 的实际下发值，全部挂在
   `~observe_debug_verbose` 开关后面（默认关闭）。
 
+## 让仿真里的人和车动起来
+
+```bash
+# 人绕圈走（vx/wz 可调，默认 0.4 m/s、0.25 rad/s → 半径 1.6 m）
+PF_PERSON_MODE=circle PF_PERSON_VX=0.4 PF_PERSON_WZ=0.25 ...
+
+# 人站着不动（调试观察点用）
+PF_PERSON_MODE=still
+```
+
+`still` 模式下 G1 的 `vx/wz` 是 0，看起来就是「不动」——这是配置，不是故障。
+小车同理：人在 2 m 正前方时观测点已经够好，管理器按设计 `OBSERVING/HOLD`，`/cmd_vel` 全 0；
+只有人走出视场或距离超出区间，才会 `MICRO_ADJUST`/`REPOSITION`/`SEARCHING` 并驱动底盘。
+
+实测（circle 模式，36 s）：
+
+```
+   0.0  OBSERVING     0.00,0.00   yaw 0.00
+   3.0  MICRO_ADJUST  0.00,0.45   yaw 0.12
+   9.0  MICRO_ADJUST  0.00,0.45   yaw 0.59
+  15.0  SEARCHING     0.00,-0.45  yaw 0.61
+  21.0  MICRO_ADJUST  0.00,-0.45  yaw 0.27
+  27.0  OBSERVING     0.00,0.00
+```
+
 ## 限制
 
 - **未实跑验证**：本机没有 GPU/GUI，只做了语法与 compose 校验。首次务必

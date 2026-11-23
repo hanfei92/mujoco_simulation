@@ -17,7 +17,8 @@ python3 /app/pf_sim/pose_tf.py &
 python3 /app/pf_sim/camera_bridge.py &
 python3 /app/pf_sim/sim_world.py &
 python3 /app/pf_sim/cmd_vel_bridge.py &
-python3 /app/pf_sim/person_walker.py _mode:=${PF_PERSON_MODE:-circle} &
+python3 /app/pf_sim/person_walker.py _mode:=${PF_PERSON_MODE:-circle} \
+    _vx:=${PF_PERSON_VX:-0.4} _wz:=${PF_PERSON_WZ:-0.25} &
 sleep 2
 python3 /app/pf_sim/gt_pose.py &
 python3 /app/pf_sim/target_bridge.py &
