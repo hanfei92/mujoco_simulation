@@ -25,7 +25,7 @@ import zmq
 from cv_bridge import CvBridge
 from geometry_msgs.msg import PoseStamped, Twist
 from monocular_people_tracking.msg import TrackArray
-from nav_msgs.msg import Odometry
+from nav_msgs.msg import Odometry, Path
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
@@ -55,6 +55,18 @@ PAGE = b"""<!doctype html>
   <div class="card"><h3>ROBOT CAMERA</h3><img class="sensor" src="/stream/camera"></div>
   <div class="card"><h3>LIDAR 3D (drag to orbit, wheel to zoom)</h3><img id="lidar" class="sensor" src="/stream/lidar"></div>
   <div class="card" id="status"><h3>STATUS</h3><div>loading...</div></div>
+  <div class="card"><h3>ROUTE EDITOR (click the map, then send)</h3>
+    <div style="position:relative">
+      <img id="mapimg" src="/api/map.png" style="width:100%;display:block;border-radius:4px">
+      <canvas id="draw" style="position:absolute;left:0;top:0;width:100%;height:100%"></canvas>
+    </div>
+    <div style="margin-top:6px">
+      <button onclick="undoPoint()">undo</button>
+      <button onclick="clearPoints()">clear</button>
+      <button onclick="sendRoute()">send to G1</button>
+      <span id="routemsg" style="color:#8fa3bf"></span>
+    </div>
+  </div>
   <div class="card"><h3>TIMELINE (candidates / FOV / decisions)</h3>
     <iframe id="timeline" style="width:100%;height:260px;border:0;border-radius:4px;background:#0d0f12"></iframe>
   </div>
@@ -96,6 +108,64 @@ async function replay(){
   const r = await fetch('/api/replay?name='+encodeURIComponent(name), {method:'POST'});
   document.getElementById('summary').textContent = await r.text();
 }
+let mapMeta = null, routePts = [];
+async function loadMapMeta(){
+  try { mapMeta = await (await fetch('/api/map_meta')).json(); } catch(e) {}
+}
+function mapToPixel(x, y){
+  const img = document.getElementById('mapimg');
+  return [(x - mapMeta.origin_x) * mapMeta.px_per_m,
+          img.naturalHeight - (y - mapMeta.origin_y) * mapMeta.px_per_m];
+}
+function redrawRoute(){
+  const img = document.getElementById('mapimg');
+  const canvas = document.getElementById('draw');
+  if (!img.naturalWidth) return;
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!mapMeta) return;
+  ctx.strokeStyle = '#5ac8ff'; ctx.lineWidth = 3;
+  ctx.beginPath();
+  routePts.forEach(function(pt, i){
+    const p = mapToPixel(pt[0], pt[1]);
+    if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]);
+  });
+  ctx.stroke();
+  ctx.fillStyle = '#5ac8ff';
+  routePts.forEach(function(pt){
+    const p = mapToPixel(pt[0], pt[1]);
+    ctx.beginPath(); ctx.arc(p[0], p[1], 4, 0, 6.283); ctx.fill();
+  });
+}
+document.getElementById('mapimg').addEventListener('click', function(ev){
+  if (!mapMeta) return;
+  const img = ev.target;
+  const rect = img.getBoundingClientRect();
+  const px = (ev.clientX - rect.left) / rect.width * img.naturalWidth;
+  const py = (ev.clientY - rect.top) / rect.height * img.naturalHeight;
+  routePts.push([mapMeta.origin_x + px / mapMeta.px_per_m,
+                 mapMeta.origin_y + (img.naturalHeight - py) / mapMeta.px_per_m]);
+  redrawRoute();
+  document.getElementById('routemsg').textContent = routePts.length + ' pts';
+});
+function undoPoint(){ routePts.pop(); redrawRoute();
+  document.getElementById('routemsg').textContent = routePts.length + ' pts'; }
+function clearPoints(){ routePts = []; redrawRoute();
+  document.getElementById('routemsg').textContent = '0 pts'; }
+async function sendRoute(){
+  const box = document.getElementById('routemsg');
+  if (routePts.length < 2) { box.textContent = 'need >= 2 points'; return; }
+  const body = JSON.stringify({points: routePts});
+  const response = await fetch('/api/route', {method: 'POST',
+      headers: {'Content-Type': 'application/json'}, body: body});
+  const result = await response.json();
+  box.textContent = result.ok
+      ? ('sent ' + result.points + ' pts / ' + result.length + ' m')
+      : ('rejected: ' + result.message);
+  document.getElementById('mapimg').src = '/api/map.png?t=' + Date.now();
+}
 function orbit(id, url){
   const img = document.getElementById(id);
   let dragging=false, lx=0, ly=0;
@@ -115,6 +185,7 @@ orbit('overview','/api/view');
 orbit('lidar','/api/lidar_view');
 document.getElementById('timeline').src =
   'http://' + location.hostname + ':8781/?file=observe-latest.jsonl';
+loadMapMeta();
 poll(); setInterval(poll, 1000); sessions();
 </script></body></html>"""
 
@@ -137,6 +208,11 @@ class Dashboard(object):
         endpoint = rospy.get_param('~zmq_endpoint', 'tcp://mujoco-wrapper:5555')
         self.cmd_endpoint = rospy.get_param('~zmq_command_endpoint',
                                             'tcp://mujoco-wrapper:5556')
+        self.route_pub = rospy.Publisher('/person_route/set', Path,
+                                         queue_size=1, latch=True)
+        self.map_data = self._load_map(
+            rospy.get_param('~map_file', '/opt/pf_tmp/pf_map.json'))
+        self.route_points = []
         self.view_context = zmq.Context()
         self.view_push = self.view_context.socket(zmq.PUSH)
         self.view_push.setsockopt(zmq.LINGER, 0)
@@ -161,6 +237,105 @@ class Dashboard(object):
                                           self._make_handler())
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         rospy.loginfo('dashboard on http://0.0.0.0:%d/', self.port)
+
+    def _load_map(self, path):
+        try:
+            with open(path) as handle:
+                return json.load(handle)
+        except OSError:
+            rospy.logwarn('dashboard: map file %s not found', path)
+            return None
+
+    def map_meta(self):
+        if not self.map_data:
+            return {}
+        resolution = float(self.map_data['resolution'])
+        scale = 24.0  # pixels per metre
+        return {
+            'origin_x': float(self.map_data['origin_x']),
+            'origin_y': float(self.map_data['origin_y']),
+            'resolution': resolution,
+            'width': int(self.map_data['width']),
+            'height': int(self.map_data['height']),
+            'px_per_m': scale,
+        }
+
+    def render_map(self):
+        """Occupancy map + current route + robot/person, for the route editor."""
+        meta = self.map_meta()
+        if not meta:
+            return None
+        scale = meta['px_per_m']
+        width = int(meta['width'] * meta['resolution'] * scale)
+        height = int(meta['height'] * meta['resolution'] * scale)
+        canvas = np.full((height, width, 3), 46, dtype=np.uint8)
+        grid = np.array(self.map_data['data'], dtype=np.int8).reshape(
+            meta['height'], meta['width'])
+        cell = meta['resolution'] * scale
+        for iy in range(meta['height']):
+            for ix in range(meta['width']):
+                if grid[iy, ix] < 50:
+                    continue
+                x0 = int(ix * cell)
+                y0 = int(height - (iy + 1) * cell)
+                canvas[y0:y0 + int(cell) + 1, x0:x0 + int(cell) + 1] = (12, 12, 14)
+
+        def to_px_grid(metre):
+            # metres -> pixels: the scale already is pixels per metre
+            return int((metre - meta['origin_x']) * scale)
+
+        # grid so the user can judge distances while drawing
+        for metre in range(-10, 11, 2):
+            offset = to_px_grid(metre)
+            cv2.line(canvas, (offset, 0), (offset, height), (58, 62, 70), 1)
+            cv2.line(canvas, (0, offset), (width, offset), (58, 62, 70), 1)
+
+        def to_px(x, y):
+            # clamp: a single bogus odometry sample must not kill the request
+            if not (math.isfinite(x) and math.isfinite(y)):
+                return (0, 0)
+            px = int((x - meta['origin_x']) * scale)
+            py = int(height - (y - meta['origin_y']) * scale)
+            return (max(0, min(width - 1, px)), max(0, min(height - 1, py)))
+
+        points = self.route_points or []
+        for a, b in zip(points, points[1:]):
+            cv2.line(canvas, to_px(*a), to_px(*b), (90, 200, 255), 2)
+        for point in points:
+            cv2.circle(canvas, to_px(*point), 3, (90, 200, 255), -1)
+
+        person = self.status.get('person') or '-'
+        if person != '-':
+            try:
+                x, y = [float(part) for part in person.split(',')]
+                cv2.circle(canvas, to_px(x, y), 5, (80, 220, 120), -1)
+            except ValueError:
+                pass
+        cv2.drawMarker(canvas, to_px(self.robot[0], self.robot[1]),
+                       (80, 160, 255), cv2.MARKER_TRIANGLE_UP, 10, 2)
+        return canvas
+
+    def set_route(self, points):
+        if len(points) < 2:
+            return {'ok': False, 'message': 'need at least 2 points'}
+        path = Path()
+        path.header.frame_id = 'world'
+        path.header.stamp = rospy.Time.now()
+        total = 0.0
+        previous = None
+        for x, y in points:
+            pose = PoseStamped()
+            pose.header = path.header
+            pose.pose.position.x = float(x)
+            pose.pose.position.y = float(y)
+            pose.pose.orientation.w = 1.0
+            path.poses.append(pose)
+            if previous is not None:
+                total += math.hypot(x - previous[0], y - previous[1])
+            previous = (x, y)
+        self.route_points = list(points)
+        self.route_pub.publish(path)
+        return {'ok': True, 'points': len(points), 'length': round(total, 1)}
 
     def _send_view(self):
         import command_pb2
@@ -402,11 +577,20 @@ class Dashboard(object):
                     payload = dict(view.status)
                     payload['robot'] = '{:.2f},{:.2f}'.format(view.robot[0],
                                                               view.robot[1])
+                    payload['route_points'] = len(view.route_points)
                     return self._send(200, json.dumps(payload))
                 if path == '/api/view':
                     return self._send(200, json.dumps(view.adjust_view()))
                 if path == '/api/lidar_view':
                     return self._send(200, json.dumps(view.adjust_lidar_view()))
+                if path == '/api/map_meta':
+                    return self._send(200, json.dumps(view.map_meta()))
+                if path == '/api/map.png':
+                    canvas = view.render_map()
+                    if canvas is None:
+                        return self._send(404, 'no map')
+                    ok, buffer = cv2.imencode('.png', canvas)
+                    return self._send(200, buffer.tobytes(), 'image/png')
                 if path == '/api/sessions':
                     return self._send(200, json.dumps({'sessions': view.sessions()}))
                 if path == '/api/summary':
@@ -419,6 +603,15 @@ class Dashboard(object):
 
             def do_POST(self):
                 path = self.path.split('?')[0]
+                if path == '/api/route':
+                    length = int(self.headers.get('Content-Length') or 0)
+                    try:
+                        payload = json.loads(self.rfile.read(length) or b'{}')
+                        result = view.set_route(payload.get('points') or [])
+                        return self._send(200, json.dumps(result))
+                    except Exception as exc:  # noqa: BLE001
+                        return self._send(400, json.dumps({'ok': False,
+                                                           'message': str(exc)}))
                 if path == '/api/replay':
                     name = self._query('name')
                     return self._send(200, view.replay(name), 'text/plain')

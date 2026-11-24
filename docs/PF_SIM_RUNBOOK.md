@@ -140,6 +140,24 @@ python3 /home/amigo/project/RND/person_following_ws/tools/ros_smoke/web_view.py 
 python3 scripts/summarize_pf_session.py tmp/sim_logs
 ```
 
+## 面板里手绘路线
+
+面板右侧「ROUTE EDITOR」显示房间地图（家具黑块、网格 2 m/格、橙线=当前路线、
+橙三角=小车、绿点=G1）：
+
+1. 在地图上**点击**加点（可多次）
+2. `undo` / `clear` 调整
+3. `send to G1` → 通过 `/person_route/set` 发给路线节点，G1 立即改走这条路线
+
+要点：
+
+- 路线画在 `world` 坐标系，坐标由地图 `origin + 像素/px_per_m` 换算出，点击精度约 4 cm；
+- 发送时会打印点数与总长度（如 `4 pts / 8.7 m`）；
+- 需要 `PF_PERSON_MODE=route` 才生效（其它模式没有路线节点在跑）；
+- 手绘路线不会自动避障——请自己避开黑色家具块。
+
+相关接口：`GET /api/map.png`、`GET /api/map_meta`、`POST /api/route {"points":[[x,y],...]}`。
+
 ## 覆盖度热力图
 
 ```bash

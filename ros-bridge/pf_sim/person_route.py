@@ -11,6 +11,7 @@ furniture.  Segments are stitched with shortest paths on the free grid.
 import collections
 import json
 import math
+import os
 
 import numpy as np
 import rospy
@@ -35,6 +36,29 @@ class RoutePlanner(object):
         self.rate = rospy.get_param('~rate', 10.0)
 
         map_file = rospy.get_param('~map_file', '/tmp/pf_map.json')
+        if not os.path.isfile(map_file):
+            rospy.logerr(
+                'person_route: map file %s not found. Generate it with '
+                'tools/make_map_from_mjcf.py and mount it into the container '
+                '(-v $PWD/tmp/pf_map.json:/tmp/pf_map.json:ro). The person '
+                'will stay still.', map_file)
+            self.route = []
+            self.finished = True
+            self.grid = None
+            self.free = None
+            self.origin_x = self.origin_y = 0.0
+            self.resolution = 0.1
+            self.index = 0
+            self.path_pub = rospy.Publisher('/person_route/path', Path,
+                                            queue_size=1, latch=True)
+            endpoint = rospy.get_param('~zmq_endpoint',
+                                       'tcp://mujoco-wrapper:5556')
+            self.context = zmq.Context()
+            self.push = self.context.socket(zmq.PUSH)
+            self.push.setsockopt(zmq.LINGER, 0)
+            self.push.connect(endpoint)
+            rospy.Timer(rospy.Duration(1.0 / self.rate), self.tick)
+            return
         self._load_map(map_file)
         self.route = self._build_route()
         self.index = 0
@@ -307,6 +331,23 @@ def main():
     rospy.Subscriber('/person_pose', PointStamped, on_person, queue_size=1)
     rospy.Subscriber('/person_pose_stamped', PoseStamped, on_person_pose,
                      queue_size=1)
+
+    def on_route(message):
+        """Route drawn in the dashboard replaces the generated coverage path."""
+        points = [(pose.pose.position.x, pose.pose.position.y)
+                  for pose in message.poses]
+        if len(points) < 2:
+            rospy.logwarn('person route: ignoring route with %d points',
+                          len(points))
+            return
+        planner.route = points
+        planner.index = 0
+        planner.finished = False
+        planner._publish_path()
+        rospy.loginfo('person route: external route with %d points (%.1f m)',
+                      len(points), planner._route_length())
+
+    rospy.Subscriber('/person_route/set', Path, on_route, queue_size=1)
     rospy.spin()
 
 

@@ -8,7 +8,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-VIEWER="${MUJOCO_VIEWER:-1}"
+VIEWER="${MUJOCO_VIEWER:-0}"
 PERSON_MODE="${PF_PERSON_MODE:-route}"
 MAP_FILE="tmp/pf_map.json"
 SIM_LOGS="tmp/sim_logs"
@@ -41,6 +41,14 @@ if docker ps --format '{{.Names}}' | grep -qx mujoco-wrapper; then
     fi
 fi
 if docker ps --format '{{.Names}}' | grep -qx mujoco-wrapper; then
+    # "Up" is not enough: the passive viewer can exit on its own (lost GL
+    # context / closed window), which stops every ZMQ stream.
+    if ! docker logs --since 10s mujoco-wrapper 2>&1 | grep -q '_pull_camera_called'; then
+        echo "simulation is not stepping - recreating"
+        docker rm -f mujoco-wrapper >/dev/null 2>&1 || true
+    fi
+fi
+if docker ps --format '{{.Names}}' | grep -qx mujoco-wrapper; then
     echo "already running"
 else
     xhost +local:root >/dev/null 2>&1 || true
@@ -57,6 +65,19 @@ else
         mujoco_simulation-mujoco-wrapper:latest >/dev/null
 fi
 scripts/wait_ready.sh --wrapper
+
+if ! docker logs --since 15s mujoco-wrapper 2>&1 | grep -q '_pull_camera_called'; then
+    echo "simulation is not stepping (viewer likely failed) - retrying headless"
+    docker rm -f mujoco-wrapper >/dev/null 2>&1 || true
+    MUJOCO_VIEWER=0
+    docker run -d --name mujoco-wrapper --network sim-net \
+        --device nvidia.com/gpu=all \
+        -e MUJOCO_GL=egl -e PYOPENGL_PLATFORM=egl -e MUJOCO_VIEWER=0 \
+        -e ROBOT_MJCF_INCLUDES=/app/aidea_mujoco/mjcf/robots/g1/g1_12dof.xml \
+        -e ROBOT_PLUGIN_CONFIGS=/app/aidea_mujoco/aidea_mujoco/plugins/g1/config.yaml \
+        mujoco_simulation-mujoco-wrapper:latest >/dev/null
+    scripts/wait_ready.sh --wrapper
+fi
 
 say "3/6 occupancy map"
 if [ "$PERSON_MODE" = "route" ]; then
