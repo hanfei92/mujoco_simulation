@@ -36,7 +36,7 @@ class RoutePlanner(object):
         self.rate = rospy.get_param('~rate', 10.0)
         # keep the person still for a moment so the tracker and the
         # observation manager can lock on before the route starts
-        self.start_delay = rospy.get_param('~start_delay', 3.0)
+        self.start_delay = rospy.get_param('~start_delay', 25.0)
         self.started_at = None
 
         map_file = rospy.get_param('~map_file', '/tmp/pf_map.json')

@@ -140,6 +140,29 @@ python3 /home/amigo/project/RND/person_following_ws/tools/ros_smoke/web_view.py 
 python3 scripts/summarize_pf_session.py tmp/sim_logs
 ```
 
+## G1 的出生位置
+
+G1 默认出生在**小车正前方 2 m**（相机朝 +x），所以一启动就在画面里，跟踪会自动建立：
+
+```
+t≈8s    person (2.01, 0.00)   tracks -      （跟踪节点还在编译）
+t≈16s   person (1.84,-0.16)   tracks 1  OBSERVING   ← 跟踪建立
+t≈25s   路线启动，人开始走动
+```
+
+两个相关开关：
+
+| 变量 | 默认 | 作用 |
+| --- | --- | --- |
+| `G1_SPAWN` | 配置里的 `[2.0, 0.0, 0.0]` | 覆盖出生点 `x,y,yaw` |
+| `PF_ROUTE_DELAY` | 25 s | 路线启动前等待，给跟踪节点留编译/收敛时间 |
+
+改出生点不用重建镜像：
+
+```bash
+docker run ... -e G1_SPAWN=2.5,0.5,0 ...
+```
+
 ## 转向与换位调参
 
 仿真里的四轮底盘**原地转向只有指令的约 25%**（轮子横向擦地），所以桥接层加了角速度补偿：

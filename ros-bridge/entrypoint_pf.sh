@@ -23,7 +23,8 @@ python3 /app/pf_sim/cmd_vel_bridge.py \
 if [ "${PF_PERSON_MODE:-route}" = "route" ]; then
     python3 /app/pf_sim/person_route.py \
         _map_file:=${PF_MAP_FILE:-/tmp/pf_map.json} \
-        _lane_spacing:=${PF_ROUTE_LANE:-1.2} &
+        _lane_spacing:=${PF_ROUTE_LANE:-1.2} \
+        _start_delay:=${PF_ROUTE_DELAY:-25.0} &
 else
     python3 /app/pf_sim/person_walker.py _mode:=${PF_PERSON_MODE:-route} \
         _vx:=${PF_PERSON_VX:-0.4} _wz:=${PF_PERSON_WZ:-0.25} &
