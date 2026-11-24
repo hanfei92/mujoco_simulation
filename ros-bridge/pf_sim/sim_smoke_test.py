@@ -72,23 +72,29 @@ def main():
     record('lidar_to_ros', hz >= 3.0 and points > 1000,
            '{:.1f} Hz, {} points'.format(hz, points))
 
-    tracks = collect('/monocular_people_tracking/tracks', TrackArray, 4.0)
-    hz = rate_of(tracks, 4.0)
-    record('tracker_output', hz >= 5.0, '{:.1f} Hz'.format(hz))
-
     persons = collect('/pose_estimator/pose', Persons, 3.0)
     pose_rate = rate_of(persons, 3.0)
     parts = 0
     message = persons.get('message')
     if message is not None and message.persons:
         parts = len(message.persons[0].body_part)
-    if pose_rate < 3.0:
+    person_visible = pose_rate >= 3.0
+    if not person_visible:
         record('gt_detections', False,
-               'no detection ({:.1f} Hz) - person out of view?'.format(pose_rate),
-               skipped=True)
+               'no detection - person out of view', skipped=True)
     else:
         record('gt_detections', parts >= 2,
                '{:.1f} Hz, {} keypoints'.format(pose_rate, parts))
+
+    # the tracker only publishes while it receives detections, so this case is
+    # meaningless (not failing) when nobody is in view
+    tracks = collect('/monocular_people_tracking/tracks', TrackArray, 4.0)
+    hz = rate_of(tracks, 4.0)
+    if not person_visible:
+        record('tracker_output', True,
+               'skipped: no detections to track', skipped=True)
+    else:
+        record('tracker_output', hz >= 5.0, '{:.1f} Hz'.format(hz))
 
     costmap = collect('/move_base/local_costmap/costmap',
                       OccupancyGrid, 4.0)

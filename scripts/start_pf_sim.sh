@@ -20,6 +20,26 @@ say "1/6 docker network"
 docker network create sim-net >/dev/null 2>&1 || true
 
 say "2/6 mujoco wrapper (viewer=$VIEWER)"
+NEEDS_RESTART=0
+if docker ps --format '{{.Names}}' | grep -qx mujoco-wrapper; then
+    # A "running" container can still have a dead simulation process: after a
+    # laptop suspend the GL context is lost and the sim thread dies, leaving a
+    # zombie behind. The MCP server stays up, so nothing looks wrong.
+    if docker top mujoco-wrapper 2>/dev/null | awk 'NR>1 && $3 ~ /Z/' | grep -q .; then
+        echo "simulation process is dead (zombie) - recreating"
+        NEEDS_RESTART=1
+    fi
+    RUNNING_IMAGE=$(docker inspect mujoco-wrapper -f '{{.Image}}' 2>/dev/null || true)
+    LATEST_IMAGE=$(docker images -q mujoco_simulation-mujoco-wrapper:latest)
+    if [ -n "$RUNNING_IMAGE" ] && [ -n "$LATEST_IMAGE" ] && \
+            [ "${RUNNING_IMAGE#sha256:}" != "$LATEST_IMAGE" ]; then
+        echo "wrapper image is stale - recreating"
+        NEEDS_RESTART=1
+    fi
+    if [ "$NEEDS_RESTART" = "1" ]; then
+        docker rm -f mujoco-wrapper >/dev/null 2>&1 || true
+    fi
+fi
 if docker ps --format '{{.Names}}' | grep -qx mujoco-wrapper; then
     echo "already running"
 else
