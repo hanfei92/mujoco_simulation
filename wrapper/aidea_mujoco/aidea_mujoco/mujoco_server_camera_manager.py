@@ -246,14 +246,36 @@ class MujocoServerCameraManagerSync:
 
         return (camera, render)
 
+    def _start_view_poller(self):
+        """Poll the command bus off the render thread.
+
+        Reading the multiprocessing manager proxy from the render loop made the
+        simulation hang under command traffic, so the view is cached here and
+        the render path never touches the proxy.
+        """
+        if getattr(self, '_view_thread', None) is not None:
+            return
+        self._view_cache = {}
+
+        def poll():
+            while True:
+                try:
+                    commands = (self.mujoco_server.data_proxies
+                                .get_robot_command() or {})
+                    view = commands.get('view') or {}
+                    if view:
+                        self._view_cache = dict(view)
+                except Exception:
+                    pass
+                time.sleep(1.0)
+
+        self._view_thread = threading.Thread(target=poll, daemon=True)
+        self._view_thread.start()
+
     def _overview_camera(self):
         """Free camera for the dashboard overview (orbit/zoom from the UI)."""
-        view = {}
-        try:
-            commands = self.mujoco_server.data_proxies.get_robot_command() or {}
-            view = commands.get('view') or {}
-        except Exception:
-            view = {}
+        self._start_view_poller()
+        view = getattr(self, '_view_cache', {})
         camera = mujoco.MjvCamera()
         camera.type = mujoco.mjtCamera.mjCAMERA_FREE
         camera.lookat[0] = float(view.get('lookat_x', 0.0))

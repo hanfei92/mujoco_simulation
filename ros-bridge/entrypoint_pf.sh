@@ -27,7 +27,11 @@ if [ "${PF_PERSON_MODE:-route}" = "route" ]; then
         _start_delay:=${PF_ROUTE_DELAY:-25.0} &
 else
     python3 /app/pf_sim/person_walker.py _mode:=${PF_PERSON_MODE:-route} \
-        _vx:=${PF_PERSON_VX:-0.4} _wz:=${PF_PERSON_WZ:-0.25} &
+        _vx:=${PF_PERSON_VX:-0.4} _wz:=${PF_PERSON_WZ:-0.25} \
+        _start_delay:=${PF_WALK_DELAY:-25.0} \
+        _map_file:=${PF_MAP_FILE:-/tmp/pf_map.json} \
+        _orbit_radius:=${PF_ORBIT_RADIUS:-3.0} \
+        _orbit_speed:=${PF_ORBIT_SPEED:-0.35} &
 fi
 sleep 2
 python3 /app/pf_sim/gt_pose.py &
