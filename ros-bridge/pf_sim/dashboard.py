@@ -57,8 +57,9 @@ PAGE = b"""<!doctype html>
   <div class="card" id="status"><h3>STATUS</h3><div>loading...</div></div>
   <div class="card"><h3>ROUTE EDITOR (click the map, then send)</h3>
     <div style="position:relative">
-      <img id="mapimg" src="/api/map.png" style="width:100%;display:block;border-radius:4px">
-      <canvas id="draw" style="position:absolute;left:0;top:0;width:100%;height:100%"></canvas>
+      <img id="mapimg" src="/api/map.png"
+           style="width:100%;display:block;border-radius:4px;cursor:crosshair">
+      <canvas id="draw" style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none"></canvas>
     </div>
     <div style="margin-top:6px">
       <button onclick="addPoint()">add point</button>
@@ -171,6 +172,10 @@ function redrawRoute(){
 }
 const mapImg = document.getElementById('mapimg');
 mapImg.addEventListener('load', syncCanvas);
+mapImg.addEventListener('error', function(){
+  document.getElementById('routemsg').textContent =
+    'map image failed to load (/api/map.png)';
+});
 window.addEventListener('resize', syncCanvas);
 mapImg.addEventListener('mousemove', function(ev){
   if (!mapMeta) return;
