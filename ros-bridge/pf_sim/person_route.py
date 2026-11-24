@@ -34,6 +34,10 @@ class RoutePlanner(object):
         self.waypoint_tolerance = rospy.get_param('~waypoint_tolerance', 0.25)
         self.loop = bool(rospy.get_param('~loop', True))
         self.rate = rospy.get_param('~rate', 10.0)
+        # keep the person still for a moment so the tracker and the
+        # observation manager can lock on before the route starts
+        self.start_delay = rospy.get_param('~start_delay', 3.0)
+        self.started_at = None
 
         map_file = rospy.get_param('~map_file', '/tmp/pf_map.json')
         if not os.path.isfile(map_file):
@@ -264,6 +268,11 @@ class RoutePlanner(object):
             pass
 
     def tick(self, _event):
+        if self.started_at is None:
+            self.started_at = rospy.Time.now()
+        if (rospy.Time.now() - self.started_at).to_sec() < self.start_delay:
+            self._send(0.0, 0.0)
+            return
         if not self.route:
             self._send(0.0, 0.0)
             return

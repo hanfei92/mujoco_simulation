@@ -188,6 +188,13 @@ class G1Plugin(RobotPlugin):
         self.fall_cmd = np.array([0.5, 0.0, 0.0], dtype=np.float32)
 
         spawn = config.get("spawn_pos", [0.0, 0.0, 0.0])
+        override = os.environ.get("G1_SPAWN", "")
+        if override:
+            try:
+                spawn = [float(value) for value in override.split(",")]
+                print(f"[g1] spawn override from G1_SPAWN: {spawn}")
+            except ValueError:
+                print(f"[g1] ignoring bad G1_SPAWN={override!r}")
         self.mode = "stand"
         self.base_x = float(spawn[0])
         self.base_y = float(spawn[1])
