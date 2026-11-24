@@ -140,12 +140,28 @@ python3 /home/amigo/project/RND/person_following_ws/tools/ros_smoke/web_view.py 
 python3 scripts/summarize_pf_session.py tmp/sim_logs
 ```
 
+## 转向与换位调参
+
+仿真里的四轮底盘**原地转向只有指令的约 25%**（轮子横向擦地），所以桥接层加了角速度补偿：
+
+| 变量 | 默认 | 作用 |
+| --- | --- | --- |
+| `PF_ANGULAR_GAIN` | 2.5 | `/cmd_vel` 角速度放大倍数（补偿打滑） |
+| `PF_TURN_MAX_YAW` | 0.8 | 管理器转向上限 rad/s |
+| `PF_MIN_MOVE_INTERVAL` | 1.5 | 两次平移的最小间隔（调小更灵活） |
+| `PF_REPOSITION_CONFIRM` | 1 | 换位确认周期数（调小更快响应） |
+| `PF_MAX_REPOSITIONS` | 6 | 每次「好视角」之间允许的换位次数 |
+
+实测（G1 绕半径 1.6 m 走 25 s）：**15 Hz 全程检测到人，99% 的时间人处在画面中间一半**
+（之前经常贴边甚至丢失）。
+
 ## 面板里手绘路线
 
 面板右侧「ROUTE EDITOR」显示房间地图（家具黑块、网格 2 m/格、橙线=当前路线、
 橙三角=小车、绿点=G1）：
 
-1. 在地图上**点击**加点（可多次）
+1. 点 **`add point`** 按钮加点（取鼠标在地图上的位置；没移动过鼠标时取小车当前位置），
+   或直接在地图上**点击**加点
 2. `undo` / `clear` 调整
 3. `send to G1` → 通过 `/person_route/set` 发给路线节点，G1 立即改走这条路线
 

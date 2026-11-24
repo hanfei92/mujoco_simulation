@@ -61,6 +61,7 @@ PAGE = b"""<!doctype html>
       <canvas id="draw" style="position:absolute;left:0;top:0;width:100%;height:100%"></canvas>
     </div>
     <div style="margin-top:6px">
+      <button onclick="addPoint()">add point</button>
       <button onclick="undoPoint()">undo</button>
       <button onclick="clearPoints()">clear</button>
       <button onclick="sendRoute()">send to G1</button>
@@ -86,6 +87,7 @@ async function poll(){
       '<h3>STATUS</h3>' +
       row('state', s.state) + row('tracks', s.tracks) +
       row('cmd', s.cmd) + row('person', s.person) + row('reason', s.reason);
+    if (s.robot) { robotWorld = s.robot.split(',').map(Number); }
   }catch(e){}
 }
 function row(k,v){return '<div><span>'+k+'</span><span>'+v+'</span></div>'}
@@ -108,9 +110,36 @@ async function replay(){
   const r = await fetch('/api/replay?name='+encodeURIComponent(name), {method:'POST'});
   document.getElementById('summary').textContent = await r.text();
 }
-let mapMeta = null, routePts = [];
+let mapMeta = null, routePts = [], hoverWorld = null, robotWorld = [0, 0];
 async function loadMapMeta(){
   try { mapMeta = await (await fetch('/api/map_meta')).json(); } catch(e) {}
+}
+function syncCanvas(){
+  const img = document.getElementById('mapimg');
+  const canvas = document.getElementById('draw');
+  const width = img.naturalWidth || 480;
+  const height = img.naturalHeight || 480;
+  canvas.width = width;
+  canvas.height = height;
+  canvas.style.width = img.clientWidth + 'px';
+  canvas.style.height = img.clientHeight + 'px';
+}
+function pixelToWorld(ev){
+  const img = document.getElementById('mapimg');
+  const rect = img.getBoundingClientRect();
+  const px = (ev.clientX - rect.left) / rect.width * img.naturalWidth;
+  const py = (ev.clientY - rect.top) / rect.height * img.naturalHeight;
+  return [mapMeta.origin_x + px / mapMeta.px_per_m,
+          mapMeta.origin_y + (img.naturalHeight - py) / mapMeta.px_per_m];
+}
+function addPoint(){
+  const box = document.getElementById('routemsg');
+  if (!mapMeta) { box.textContent = 'map not loaded'; return; }
+  const point = hoverWorld || robotWorld;
+  routePts.push(point);
+  redrawRoute();
+  box.textContent = routePts.length + ' pts (' + point[0].toFixed(1) + ', ' +
+                    point[1].toFixed(1) + ')';
 }
 function mapToPixel(x, y){
   const img = document.getElementById('mapimg');
@@ -121,6 +150,7 @@ function redrawRoute(){
   const img = document.getElementById('mapimg');
   const canvas = document.getElementById('draw');
   if (!img.naturalWidth) return;
+  syncCanvas();
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
   const ctx = canvas.getContext('2d');
@@ -139,16 +169,17 @@ function redrawRoute(){
     ctx.beginPath(); ctx.arc(p[0], p[1], 4, 0, 6.283); ctx.fill();
   });
 }
-document.getElementById('mapimg').addEventListener('click', function(ev){
+const mapImg = document.getElementById('mapimg');
+mapImg.addEventListener('load', syncCanvas);
+window.addEventListener('resize', syncCanvas);
+mapImg.addEventListener('mousemove', function(ev){
   if (!mapMeta) return;
-  const img = ev.target;
-  const rect = img.getBoundingClientRect();
-  const px = (ev.clientX - rect.left) / rect.width * img.naturalWidth;
-  const py = (ev.clientY - rect.top) / rect.height * img.naturalHeight;
-  routePts.push([mapMeta.origin_x + px / mapMeta.px_per_m,
-                 mapMeta.origin_y + (img.naturalHeight - py) / mapMeta.px_per_m]);
-  redrawRoute();
-  document.getElementById('routemsg').textContent = routePts.length + ' pts';
+  hoverWorld = pixelToWorld(ev);
+});
+mapImg.addEventListener('click', function(ev){
+  if (!mapMeta) return;
+  hoverWorld = pixelToWorld(ev);
+  addPoint();
 });
 function undoPoint(){ routePts.pop(); redrawRoute();
   document.getElementById('routemsg').textContent = routePts.length + ' pts'; }

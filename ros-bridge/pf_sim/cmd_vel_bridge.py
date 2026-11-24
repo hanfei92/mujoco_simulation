@@ -11,6 +11,10 @@ import command_pb2
 class CmdVelBridge(object):
     def __init__(self):
         endpoint = rospy.get_param('~zmq_endpoint', 'tcp://mujoco-wrapper:5556')
+        # The 4-wheel skid-steer only achieves ~25% of the commanded rotation
+        # in this simulator, so the bridge can boost the angular command.
+        self.angular_gain = float(rospy.get_param('~angular_gain', 1.0))
+        self.linear_gain = float(rospy.get_param('~linear_gain', 1.0))
         self.robot_id = rospy.get_param('~robot_id', 'g1')
         self.mode = rospy.get_param('~mode', 'walk')
         self.context = zmq.Context()
@@ -25,8 +29,8 @@ class CmdVelBridge(object):
         command = command_pb2.Command()
         command.kind = 'robot'
         command.robot_id = self.robot_id
-        command.vx = message.linear.x
-        command.omega = message.angular.z
+        command.vx = message.linear.x * self.linear_gain
+        command.omega = message.angular.z * self.angular_gain
         command.mode = self.mode
         try:
             self.push.send(command.SerializeToString(), zmq.NOBLOCK)

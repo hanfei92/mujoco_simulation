@@ -17,7 +17,9 @@ python3 /app/pf_sim/pose_tf.py &
 python3 /app/pf_sim/lidar_bridge.py &
 python3 /app/pf_sim/camera_bridge.py &
 python3 /app/pf_sim/sim_world.py &
-python3 /app/pf_sim/cmd_vel_bridge.py &
+python3 /app/pf_sim/cmd_vel_bridge.py \
+    _angular_gain:=${PF_ANGULAR_GAIN:-2.5} \
+    _linear_gain:=${PF_LINEAR_GAIN:-1.0} &
 if [ "${PF_PERSON_MODE:-route}" = "route" ]; then
     python3 /app/pf_sim/person_route.py \
         _map_file:=${PF_MAP_FILE:-/tmp/pf_map.json} \
@@ -89,7 +91,11 @@ if [ "${PF_MANAGER:-0}" = "1" ]; then
         _observe_global_costmap_topic:=/move_base/global_costmap/costmap \
         _observe_static_map_topic:=/map \
         _observe_debug_log_dir:=${PF_LOG_DIR:-/tmp/person_follow_observe} \
-        _observe_debug_markers:=false &
+        _observe_debug_markers:=false \
+        _observe_turn_max_yaw:=${PF_TURN_MAX_YAW:-0.8} \
+        _observe_min_move_interval:=${PF_MIN_MOVE_INTERVAL:-1.5} \
+        _observe_reposition_confirm_cycles:=${PF_REPOSITION_CONFIRM:-1} \
+        _observe_max_repositions_per_episode:=${PF_MAX_REPOSITIONS:-6} &
 fi
 
 wait
